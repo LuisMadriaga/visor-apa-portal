@@ -1,0 +1,48 @@
+# === Entornos virtuales ===
+env/
+venv/
+ENV/
+*.pyc
+__pycache__/
+
+# === Archivos de entorno ===
+*.env
+*.env.*
+!.env.example
+
+# === Archivos del sistema ===
+.DS_Store
+Thumbs.db
+
+# === Logs ===
+*.log
+*.out
+*.err
+
+# === Archivos temporales ===
+*.tmp
+*.swp
+*.bak
+
+# === Archivos de bases de datos locales ===
+*.sqlite3
+
+# === Compilaciones y dependencias ===
+/frontend/node_modules/
+/frontend/build/
+/frontend/.pnp
+/frontend/.pnp.js
+/frontend/coverage/
+
+# === Docker ===
+/data/
+docker-compose.override.yml
+
+# === Archivos de IDEs ===
+.vscode/
+.idea/
+*.code-workspace
+
+# === Archivos de sistema Windows ===
+ehthumbs.db
+Desktop.ini

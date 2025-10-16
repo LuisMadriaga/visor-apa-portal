@@ -1,0 +1,82 @@
+body {
+  margin: 0;
+  font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  background: linear-gradient(135deg, #e3f2fd 0%, #f0f9ff 100%);
+  color: #023e8a;
+  overflow: hidden;
+}
+
+/* Contenedor general */
+.app-container {
+  text-align: center;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Título */
+.titulo {
+  font-size: 1.8rem;
+  font-weight: bold;
+  margin: 10px 0;
+}
+
+/* Swiper principal */
+.swiper {
+  flex-grow: 1;
+  width: 100%;
+  height: calc(100vh - 100px);
+}
+
+/* Slide */
+.visor-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 100%;
+}
+
+/* PDF */
+.visor-pdf {
+  width: 95%;
+  height: 88vh;
+  border: none;
+  border-radius: 10px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* Texto */
+.mensaje {
+  margin-top: 30px;
+  font-size: 1.2rem;
+  color: #0077b6;
+}
+
+.pdf-scroll-container {
+  touch-action: pan-y !important;
+  -ms-touch-action: pan-y !important;
+}
+
+.swiper {
+  touch-action: pan-x !important;
+}
+
+.tabla-tecnicas {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 8px;
+  margin-bottom: 20px;
+}
+
+.tabla-tecnicas td {
+  width: 25%;
+  padding: 3px 6px;
+  font-size: 10pt;
+  vertical-align: top;
+}
+
+.tecnica {
+  text-align: left;
+}
+
+

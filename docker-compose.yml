@@ -1,0 +1,36 @@
+services:
+  apa_backend:
+    build:
+      context: .
+      target: backend        # 👈 construye solo la etapa Python
+    container_name: apa_backend
+    restart: always
+    env_file:
+      - .env
+    command: ["gunicorn", "backend.wsgi:application", "--bind", "0.0.0.0:8000"]   # ✅ CORREGIDO
+    environment:
+      - DJANGO_SETTINGS_MODULE=backend.settings                                   # ✅ CORREGIDO
+    volumes:
+      - ./backend:/app/backend
+      - ./static:/app/static
+    expose:
+      - "8000"
+    networks:
+      - sistemas_network
+
+  nginx_apa:
+    build:
+      context: .
+      target: final          # 👈 usa la etapa Nginx final
+    container_name: nginx_apa
+    restart: always
+    ports:
+      - "8080:80"
+    depends_on:
+      - apa_backend
+    networks:
+      - sistemas_network
+
+networks:
+  sistemas_network:
+    external: true

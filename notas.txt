@@ -1,0 +1,13 @@
+/* {% if inf.responsable_examen %}
+<div class="firma-responsable">
+  {% if inf.firma_responsable %}
+    <img src="{% static inf.firma_responsable %}" alt="Firma responsable" />
+  {% endif %}
+  <span>Responsable: {{ inf.responsable_examen }}</span>
+</div>
+{% endif %} */
+
+<div class="firma-responsable">
+  <img src="{% static 'img/firma_meneses.png' %}" alt="Firma Dr. Meneses" />
+  <span>Responsable: {{ inf.responsable_examen }}</span>
+</div>

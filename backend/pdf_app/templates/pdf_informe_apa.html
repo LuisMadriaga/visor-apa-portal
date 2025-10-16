@@ -1,0 +1,543 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<style>
+  /* ===== CONFIGURACIÓN DE PÁGINA ===== */
+  @page {
+    margin: 1.5cm 1.2cm 1.2cm 1.2cm;
+  }
+
+  body {
+    font-family: "Arial Narrow", "Helvetica", sans-serif;
+    font-size: 8pt;
+    color: #000;
+  }
+
+.cabecera {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  width: 100%;
+  margin-bottom: 6px;
+}
+
+/* 🔹 Logo en esquina superior izquierda */
+.cabecera .logo img {
+  width: 120px;           /* ajusta según el tamaño real del logo */
+  height: auto;
+  display: block;
+  margin-top: 2mm;
+  margin-left: 0;
+}
+
+/* 🔹 Título centrado */
+.cabecera .titulo {
+  text-align: center;
+  flex: 1;                /* ocupa el espacio central */
+  font-weight: bold;
+  letter-spacing: 0.3px;
+  font-size: 10pt;
+  margin-top: 5mm;
+  line-height: 1.3;
+}
+
+/* 🔹 Código de barras alineado a la derecha */
+.cabecera .barcode {
+  text-align: right;
+  margin-top: -2mm;
+}
+
+.cabecera .barcode img {
+  width: 240px;
+  height: auto;
+  transform: scaleY(0.55);
+  display: inline-block;
+  vertical-align: middle;
+}
+
+
+
+  .titulo-laboratorio {
+    text-align: right;
+    font-size: 11pt;
+    font-weight: bold;
+    margin: 0 0 0.15cm 0;
+  }
+
+
+  /* ===== TABLA PRINCIPAL ===== */
+  .tabla-datos {
+    width: 100%;
+    border-collapse: separate;   /* 🔹 cambia de collapse a separate */
+    border-spacing: 10px 0;      /* 🔹 10px horizontal entre columnas, 0px vertical */
+    border: 0.8px solid #000;
+    margin-bottom: 12px;
+  }
+
+
+  .tabla-datos > tr > td {
+    padding: 0;
+    vertical-align: top;
+    border: none;
+  }
+
+  /* ===== SUBTABLAS ===== */
+  /* Cada subtabla siempre 3 columnas fijas: label | : | valor */
+  .subtabla {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed; /* 🔒 evita que cambien los anchos entre filas */
+  }
+
+  .subtabla td {
+    padding: 2px 2px;
+    vertical-align: top;
+    line-height: 1.25;
+  }
+
+  /* 1ª columna: texto del rótulo */
+  .subtabla td:nth-child(1),
+  .label {
+    width: 33.5%;            /* ajusta si quieres más/menos espacio para el rótulo */
+    white-space: nowrap;
+    font-weight: bold;
+    color: #000099;
+    text-align: left;      /* “Sexo” y demás quedan alineados a la izquierda */
+    padding-right: 2px;    /* pequeño respiro antes de “:” */
+  }
+
+  /* 2ª columna: los dos puntos, ancho fijo para alinear verticalmente */
+  .subtabla td:nth-child(2),
+  .punto {
+    width: 10px;           /* 🔹 fijo => todos los “:” se alinean */
+    text-align: center;    /* centra el carácter en su columna */
+    font-family: "Courier New", monospace;
+    font-weight: bold;
+    color: #000099;
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  /* 3ª columna: valor */
+  .subtabla td:nth-child(3),
+  .valor {
+    width: auto;           /* ocupa el resto */
+    word-break: break-word;
+    font-family: "Arial Narrow", "Helvetica", sans-serif;
+  }
+
+  .label {
+    font-weight: bold;
+    color: #000099; /* 🔹 más saturado, igual al original */
+    white-space: nowrap;
+    width: 25%;
+    padding-right: 1px;
+  }
+
+  /* 🔹 Columna monoespaciada para ":" */
+  .punto {
+    font-family: "Courier New", monospace;
+    font-weight: bold;
+    color: #000099;
+    width: 0.20cm;
+    text-align: right;
+  }
+
+  .valor {
+    width: 55%;
+    word-break: break-word;
+    font-family: "Arial Narrow", "Helvetica", sans-serif;
+  }
+
+  /* ===== TÍTULO DE SECCIÓN ===== */
+  .titulo-seccion {
+    text-align: center;
+    font-weight: bold;
+    font-size: 10pt;
+    margin-top: 14px;
+  }
+
+  .tabla-tecnicas {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 8px;
+    margin-bottom: 20px;
+  }
+
+  .tabla-tecnicas td {
+    width: 25%;
+    padding: 3px 6px;
+    font-size: 10pt;
+    vertical-align: top;
+  }
+
+  .tecnica {
+    text-align: left;
+  }
+
+  .subtabla td {
+    padding: 3px 2px;
+    vertical-align: middle; /* antes estaba top */
+  }
+
+  /* ===== TÍTULOS DE SECCIÓN ===== */
+  .seccion h3 {
+    font-weight: bold;
+    text-decoration: underline;       /* 🔹 subrayado */
+    text-underline-offset: 2px;       /* 🔹 separación del texto */
+    text-decoration-thickness: 1px;   /* 🔹 grosor fino */
+    margin-top: 10px;
+    margin-bottom: 4px;
+    font-size: 10pt;
+  }
+
+  /* ===== EVITAR CORTES DE PALABRAS Y AJUSTAR JUSTIFICACIÓN ===== */
+
+  /* 🔹 Aplica a todos los párrafos narrativos y listas del informe */
+  .seccion p,
+  .seccion li {
+    white-space: normal;          /* permite saltos normales entre palabras */
+    word-break: normal;           /* no rompas palabras normales */
+    overflow-wrap: break-word;    /* si una palabra es muy larga (ej. códigos), rompe entre sílabas */
+    hyphens: manual;              /* evita guiones automáticos */
+    text-align: justify;          /* justifica el texto */
+    text-justify: inter-word;     /* usa espacios proporcionales (más natural) */
+    line-height: 1.35;
+    orphans: 2;                   /* evita líneas sueltas al final de página */
+    widows: 2;                    /* evita líneas sueltas al inicio de página */
+  }
+
+  /* 🔹 Corrige palabras con tildes combinadas (caso Diagnóstico) */
+  .seccion p,
+  .seccion li {
+    font-variant-ligatures: none;    /* evita que WeasyPrint aplique ligaduras */
+    font-feature-settings: "liga" 0; /* desactiva ligaduras que pueden cortar tildes */
+  }
+
+  /* 🔹 Espaciado adicional entre listas y párrafos */
+  .seccion ul {
+    margin-top: 4px;
+    margin-bottom: 8px;
+    padding-left: 18px;
+    list-style-type: disc;
+  }
+
+
+  /* ===== CONFIGURACIÓN DE PÁGINA CON PIE DE PÁGINA ===== */
+  @page {
+    margin: 1.4cm 1.2cm 2.2cm 1.2cm;
+    size: A4;
+
+    /* Pie de página fijo con numeración */
+    @bottom-left {
+      content: element(footer);
+    }
+
+    @bottom-right {
+      content: "Pág: " counter(page) " de " counter(pages);
+      font-family: "Arial Narrow", "Helvetica", sans-serif;
+      font-size: 8.0pt;
+      color: #000;
+    }
+  }
+
+
+/* ===== FOOTER (repetido en todas las páginas) ===== */
+.footer {
+  position: running(footer);
+  font-family: "Arial Narrow", "Helvetica", sans-serif;
+  font-size: 8.5pt;
+  color: #000;
+  display: block;
+  width: 100%;
+  padding-top: 4px;
+  border-top: 0.5px solid #000;
+  margin-top: 10px;
+}
+
+/* Texto interno alineado igual que el original */
+.footer p {
+  margin: 0;
+  line-height: 1.25;
+}
+
+.footer p:first-child {
+  font-weight: bold;
+}
+
+/* ===== FIRMA RESPONSABLE ===== */
+/* ===== FIRMA RESPONSABLE ===== */
+.firma-responsable {
+  position: relative;
+  width: 100%;
+  text-align: right;        /* 🔹 fuerza la alineación al borde derecho */
+  margin-top: 10px;
+  margin-bottom: 0;
+  font-family: "Arial Narrow", "Helvetica", sans-serif;
+  font-size: 8.5pt;
+  color: #000;
+}
+
+.firma-responsable img {
+  width: 155px;             /* 🔹 tamaño proporcional */
+  height: auto;
+  display: block;
+  margin-left: auto;        /* 🔹 empuja la imagen completamente a la derecha */
+  margin-right: 0.2cm;      /* 🔹 margen visual desde el borde derecho */
+  margin-bottom: 2px;       /* 🔹 menos espacio entre firma y texto */
+}
+
+.firma-responsable span {
+  display: block;
+  text-align: right;        /* 🔹 asegura que el texto siga la firma */
+  margin-right: 0.2cm;      /* 🔹 mismo margen que la imagen */
+  font-weight: bold;
+}
+
+
+
+
+</style>
+</head>
+<body>
+
+<!-- PIE DE PÁGINA -->
+<div class="footer">
+  <p>Director Técnico: {{ informes.0.director_tecnico }}</p>
+  <p>Nota: Este examen debe ser interpretado solo por el médico tratante</p>
+</div>
+
+
+
+{% for inf in informes %}
+<!-- CABECERA -->
+<div class="cabecera">
+  <div class="logo">
+    <img src="{% static 'img/Logotipo_secundario_sin_slogan.png' %}" alt="Logo FALP" />
+  </div>
+
+  <div class="titulo">
+    FUNDACIÓN ARTURO LÓPEZ PÉREZ
+  </div>
+
+  <div class="barcode">
+    <img src="data:image/png;base64,{{ barcode }}" alt="Código de barras">
+  </div>
+</div>
+
+
+  <div class="titulo-laboratorio">
+    Laboratorio de Anatomía Patológica
+  </div>
+
+  <!-- TABLA DE DATOS -->
+<table class="tabla-datos">
+  <tr>
+    <td>
+      <table class="subtabla">
+        <tr>
+          <td class="label">Nombre</td>
+          <td class="punto">:</td>
+          <td class="valor">{{ inf.nombre }}</td>
+        </tr>
+      </table>
+    </td>
+    <td>
+      <table class="subtabla">
+        <tr>
+          <td class="label">Sexo</td>
+          <td class="punto">:</td>
+          <td class="valor">{{ inf.sexo }}</td>
+        </tr>
+      </table>
+    </td>
+    <td>
+      <table class="subtabla">
+        <tr>
+          <td class="label">N° Biopsia</td>
+          <td class="punto">:</td>
+          <td class="valor"><strong>{{ inf.numero_biopsia }}</strong></td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+
+  <tr>
+    <td>
+      <table class="subtabla">
+        <tr>
+          <td class="label">RUT</td>
+          <td class="punto">:</td>
+          <td class="valor">{{ inf.rut }}</td>
+        </tr>
+      </table>
+    </td>
+    <td>
+      <table class="subtabla">
+        <tr>
+          <td class="label">Edad</td>
+          <td class="punto">:</td>
+          <td class="valor">{{ inf.edad }}</td>
+        </tr>
+      </table>
+    </td>
+    <td>
+      <table class="subtabla">
+        <tr>
+          <td class="label">Toma Muestra</td>
+          <td class="punto">:</td>
+          <td class="valor">{{ inf.toma_muestra }}</td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+
+  <tr>
+    <td>
+      <table class="subtabla">
+        <tr>
+          <td class="label">Servicio</td>
+          <td class="punto">:</td>
+          <td class="valor">{{ inf.servicio }}</td>
+        </tr>
+      </table>
+    </td>
+    <td></td>
+    <td>
+      <table class="subtabla">
+        <tr>
+          <td class="label">Recep. Muestra</td>
+          <td class="punto">:</td>
+          <td class="valor">{{ inf.recep_muestra }}</td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+
+  <tr>
+    <td>
+      <table class="subtabla">
+        <tr>
+          <td class="label">Dr. Solicitante</td>
+          <td class="punto">:</td>
+          <td class="valor">{{ inf.medico_tratante }}</td>
+        </tr>
+      </table>
+    </td>
+    <td></td>
+    <td>
+      <table class="subtabla">
+        <tr>
+          <td class="label">Validación</td>
+          <td class="punto">:</td>
+          <td class="valor">{{ inf.validacion }}</td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+
+  <tr>
+    <td>
+      <table class="subtabla">
+        <tr>
+          <td class="label">Tipo de Muestra</td>
+          <td class="punto">:</td>
+          <td class="valor">{{ inf.tipo_de_muestra }}</td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+
+
+
+  
+
+  <div class="titulo-seccion">INFORME ANATOMOPATOLÓGICO</div>
+
+  {% for inf in informes %}
+
+  {% if inf.antecendentes_clinicos %}
+  <div class="seccion">
+    <h3>ANTECEDENTES CLÍNICOS</h3>
+    <p>{{ inf.antecendentes_clinicos|safe }}</p>
+  </div>
+  {% endif %}
+
+  {% if inf.examen_macroscopico %}
+  <div class="seccion">
+    <h3>EXAMEN MACROSCÓPICO</h3>
+    <p>{{ inf.examen_macroscopico|safe }}</p>
+  </div>
+  {% endif %}
+
+  {% if inf.conclusion_diagnostica %}
+  <div class="seccion">
+    <h3>CONCLUSIÓN DIAGNÓSTICA</h3>
+    <p>{{ inf.conclusion_diagnostica|safe }}</p>
+  </div>
+  {% endif %}
+
+  {% if inf.cie_morfologico_cod or inf.cie_morfologico_nombre %}
+  <div class="seccion">
+    <h3>CIE-O Morfológico</h3>
+    <p>
+      {% if inf.cie_morfologico_cod %}{{ inf.cie_morfologico_cod }}{% endif %}
+      {% if inf.cie_morfologico_cod and inf.cie_morfologico_nombre %} / {% endif %}
+      {% if inf.cie_morfologico_nombre %}{{ inf.cie_morfologico_nombre }}{% endif %}
+    </p>
+  </div>
+  {% endif %}
+
+  {% if inf.d_cie_topografico_cod or inf.cie_topografico_nombre %}
+    <div class="seccion">
+      <h3>CIE-O Topográfico</h3>
+      <p>
+        {% if inf.d_cie_topografico_cod %}{{ inf.d_cie_topografico_cod }}{% endif %}
+        {% if inf.d_cie_topografico_cod and inf.cie_topografico_nombre %} / {% endif %}
+        {% if inf.cie_topografico_nombre %}{{ inf.cie_topografico_nombre }}{% endif %}
+      </p>
+    </div>
+  {% endif %}
+
+
+  {% if inf.tecnicas_realizadas %}
+  <div class="seccion">
+    <h3>TÉCNICAS REALIZADAS:</h3>
+    <table class="tabla-tecnicas">
+      {% for fila in inf.tecnicas_realizadas %}
+        <tr>
+          {% for tecnica in fila %}
+            <td class="tecnica">{{ tecnica }}</td>
+          {% endfor %}
+        </tr>
+      {% endfor %}
+    </table>
+  </div>
+{% endif %}
+
+
+  {% if inf.informe_complementario %}
+  <div class="seccion">
+    <h3>INFORME COMPLEMENTARIO</h3>
+    <p>{{ inf.informe_complementario|safe }}</p>
+  </div>
+  {% endif %}
+
+<div class="firma-responsable">
+  <img src="{% static 'img/firma_meneses.png' %}" alt="Firma Dr. Meneses" />
+  <span>Responsable: {{ inf.responsable_examen }}</span>
+</div>
+
+
+  {% if not forloop.last %}
+    <div style="page-break-after: always;"></div>
+  {% endif %}
+{% endfor %}
+
+{% endfor %}
+
+</body>
+</html>
