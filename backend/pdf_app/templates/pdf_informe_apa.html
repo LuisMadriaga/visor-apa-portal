@@ -6,8 +6,28 @@
 <style>
   /* ===== CONFIGURACIÓN DE PÁGINA ===== */
   @page {
-    margin: 1.5cm 1.2cm 1.2cm 1.2cm;
+    margin: 1.4cm 1.2cm 2.2cm 1.2cm;
+    size: A4;
+
+    /* Encabezado fijo superior */
+    @top-center {
+      content: element(header);
+    }
+
+    /* Pie de página fijo inferior */
+    @bottom-left {
+      content: element(footer);
+    }
+
+    @bottom-right {
+      content: "Pág: " counter(page) " de " counter(pages);
+      font-family: "Arial Narrow", "Helvetica", sans-serif;
+      font-size: 8.0pt;
+      color: #000;
+    }
   }
+
+
 
   body {
     font-family: "Arial Narrow", "Helvetica", sans-serif;
@@ -296,6 +316,26 @@
   font-weight: bold;
 }
 
+/* ===== ENCABEZADO SUPERIOR (repetido en todas las páginas) ===== */
+.header {
+  position: running(header);
+  font-family: "Arial Narrow", "Helvetica", sans-serif;
+  font-size: 8.5pt;          /* igual que la Nota del pie */
+  color: #000;
+  display: block;
+  width: 100%;
+  text-align: center;
+  margin-bottom: 6px;        /* pequeño espacio antes del contenido */
+}
+
+.header p {
+  margin: 0;
+  line-height: 1.25;
+  font-weight: normal;       /* sin negrita */
+  text-decoration: none;     /* sin subrayado */
+}
+
+
 
 
 
@@ -303,13 +343,18 @@
 </head>
 <body>
 
+
+
+<!-- ENCABEZADO SUPERIOR FIJO -->
+<div class="header">
+  <p>Documento generado exclusivamente para Portal Mi FALP</p>
+</div>
+
 <!-- PIE DE PÁGINA -->
 <div class="footer">
   <p>Director Técnico: {{ informes.0.director_tecnico }}</p>
   <p>Nota: Este examen debe ser interpretado solo por el médico tratante</p>
 </div>
-
-
 
 {% for inf in informes %}
 <!-- CABECERA -->
@@ -380,6 +425,7 @@
           <td class="label">Edad</td>
           <td class="punto">:</td>
           <td class="valor">{{ inf.edad }}</td>
+          <td class="text">años</td>
         </tr>
       </table>
     </td>
@@ -527,9 +573,37 @@
   {% endif %}
 
 <div class="firma-responsable">
-  <img src="{% static 'img/firma_meneses.png' %}" alt="Firma Dr. Meneses" />
+  {% if "Buscaglia" in inf.responsable_examen %}
+    <img src="{% static 'firmas/firma_buscaglia.png' %}" alt="Firma Dr. Felipe Buscaglia Fernández" />
+  {% elif "Meneses" in inf.responsable_examen %}
+    <img src="{% static 'firmas/firma_meneses.png' %}" alt="Firma Dr. Manuel Francisco Meneses Ciuffardi" />
+  {% elif "Miranda" in inf.responsable_examen %}
+    <img src="{% static 'firmas/firma_miranda.png' %}" alt="Firma Dr. Rubén Miranda Torres" />
+  {% elif "Carrasco" in inf.responsable_examen %}
+    <img src="{% static 'firmas/firma_carrasco.png' %}" alt="Firma Dra. Ana María Carrasco Troncoso" />
+  {% elif "Molina" in inf.responsable_examen %}
+    <img src="{% static 'firmas/firma_molina.png' %}" alt="Firma Dra. Carla Molina" />
+  {% elif "Tissera" in inf.responsable_examen %}
+    <img src="{% static 'firmas/firma_tissera.png' %}" alt="Firma Dra. Claudia Tissera Garcia" />
+  {% elif "Díaz" in inf.responsable_examen or "Diaz" in inf.responsable_examen %}
+    <img src="{% static 'firmas/firma_diaz.png' %}" alt="Firma Dra. Lidia Díaz" />
+  {% elif "Gutiérrez" in inf.responsable_examen or "Gutierrez" in inf.responsable_examen %}
+    <img src="{% static 'firmas/firma_gutierrez.png' %}" alt="Firma Dra. Lorena Gutiérrez Cordero" />
+  {% elif "Delgado" in inf.responsable_examen %}
+    <img src="{% static 'firmas/firma_delgado.png' %}" alt="Firma Dra. Magdalena Delgado Barros" />
+  {% elif "Vial" in inf.responsable_examen %}
+    <img src="{% static 'firmas/firma_vial.png' %}" alt="Firma Dra. María Teresa Vial" />
+  {% elif "Sanhueza" in inf.responsable_examen %}
+    <img src="{% static 'firmas/firma_sanhueza.png' %}" alt="Firma Dra. Verónica Sanhueza Linares" />
+  {% elif "Troncoso" in inf.responsable_examen %}
+    <img src="{% static 'firmas/firma_troncoso.png' %}" alt="Firma Natalia Rosa Troncoso Castillo" />
+  {% else %}
+    <img src="{% static 'firmas/firma_generica.png' %}" alt="Firma Responsable Desconocido" />
+  {% endif %}
   <span>Responsable: {{ inf.responsable_examen }}</span>
 </div>
+
+
 
 
   {% if not forloop.last %}
