@@ -36,34 +36,45 @@ export default function VisorReportes() {
     const rut = params.get("rut");  // ✅ toma el rut desde la URL
 
     const host = window.location.hostname;
+    const port = window.location.port;
     let API_BASE;
 
-    if (host === "localhost" || host === "127.0.0.1") {
-      API_BASE = "http://localhost:8000";
-    } else if (host.startsWith("172.")) {
-      API_BASE = "http://172.16.8.194:8000";
+    // ✅ Configuración correcta para Docker y desarrollo local
+    if (host === "localhost" && port === "3000") {
+      API_BASE = "http://localhost:8000";  // solo para desarrollo
     } else {
-      API_BASE = "/api";
+      API_BASE = "/api";  // ✅ Nginx hace el proxy
     }
 
     console.log("🌐 API_BASE =", API_BASE);
     console.log("📡 Fetching:", `${API_BASE}/informes-list/${rut}/`);
 
-    fetch(`${API_BASE}/api/informes-list/${rut}/`)
+    fetch(`${API_BASE}/informes-list/${rut}/`)
       .then((res) => {
         console.log("📄 Response status:", res.status);
         return res.json();
       })
       .then((data) => {
         console.log("✅ Data recibida:", data);
-        const sorted = [...data].sort(
+
+        // 🔧 Corregir URLs de PDFs para incluir el puerto correcto (solo si aplica)
+        const correctedData = data.map(item => {
+          if (item.url && !item.url.includes(':8080')) {
+            item.url = item.url.replace(
+              'http://172.16.8.194/',
+              'http://172.16.8.194:8080/'
+            );
+          }
+          return item;
+        });
+
+        const sorted = [...correctedData].sort(
           (a, b) => b.numero_biopsia - a.numero_biopsia
         );
         setInformes(sorted);
       })
       .catch((err) => {
-        console.error("❌ Error en fetch:", err);
-        setInformes([]);
+        console.error("❌ Error al obtener informes:", err);
       })
       .finally(() => setLoading(false));
   }, []); // ✅ sin 'rut' en dependencias
@@ -235,7 +246,7 @@ export default function VisorReportes() {
         >
           {/* Logo FALP alineado a la izquierda */}
           <img
-            src={`http://172.16.8.194:8000/static/img/logo_falp4.png?v=${Date.now()}`}
+            src={`http://172.16.8.194:8080/static/img/logo_falp4.png?v=${Date.now()}`}
             alt="Logo FALP"
             style={{
               position: "absolute",

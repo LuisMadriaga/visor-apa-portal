@@ -19,6 +19,12 @@ from django.urls import path, include
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+
+    # ✅ Rutas principales del frontend/pdf viewer
     path('', include('pdf_app.urls')),
+
+    # ✅ Rutas API (informes-list, pdf, etc.)
+    path('api/', include('pdf_app.urls')),
 ]
+
 

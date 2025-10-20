@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-0b(acr1xr(jpbpn$oa@t)9h!ei^t2i%g!davxwugxs7svue$ic
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["*"]
+
 
 
 # Application definition
@@ -125,9 +125,18 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 STATIC_URL = '/static/'
+
+# 📦 Donde Django almacenará los archivos recolectados
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
+
+# 📂 Donde están los archivos fuente (img, firmas, css locales, etc.)
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'backend', 'static'),
 ]
+
+
+
 
 
 
@@ -154,3 +163,29 @@ def simple_cors_middleware(get_response):
 MIDDLEWARE.append('backend.settings.simple_cors_middleware')
 
 CORS_ALLOW_ALL_ORIGINS = True  # para desarrollo
+
+# settings.py
+
+import os
+
+# ... tu configuración existente ...
+
+# ✅ URL base del frontend
+FRONTEND_URL = os.getenv('FRONTEND_URL', 'http://localhost:8080')
+
+# ✅ Proxy reverso (Nginx)
+USE_X_FORWARDED_HOST = True
+USE_X_FORWARDED_PORT = True
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+# ✅ CORS permitido
+CORS_ALLOWED_ORIGINS = [
+    "http://172.16.8.194:8080",
+    "http://192.168.0.11:8080",
+    "http://localhost:8080",
+    "http://localhost:3000",
+]
+CORS_ALLOW_CREDENTIALS = True
+
+# ✅ Hosts permitidos
+ALLOWED_HOSTS = os.getenv('DJANGO_ALLOWED_HOSTS', '192.168.0.11,localhost,127.0.0.1,host.docker.internal').split(',')

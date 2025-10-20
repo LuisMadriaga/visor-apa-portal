@@ -152,40 +152,32 @@ export default function VisorReportes() {
 
     useEffect(() => {
       const params = new URLSearchParams(window.location.search);
-      const rut = params.get("rut");  // ✅ toma el rut desde la URL
+      const rut = params.get("rut");
 
       const host = window.location.hostname;
+      const port = window.location.port;
       let API_BASE;
 
-      if (host === "localhost" || host === "127.0.0.1") {
-        API_BASE = "http://localhost:8000";
-      } else if (host.startsWith("172.")) {
-        API_BASE = "http://172.16.8.194:8000";
-      } else {
-        API_BASE = "/api";
+      // ✅ En desarrollo local (React en localhost:3000)
+      if (host === "localhost" && port === "3000") {
+        API_BASE = "http://localhost:8080";
+      } 
+      // ✅ En cualquier otro caso (Docker con Nginx)
+      else {
+        API_BASE = "/api";  // Nginx redirige a backend
       }
 
       console.log("🌍 API_BASE =", API_BASE);
       console.log("📡 Fetching:", `${API_BASE}/informes-list/${rut}/`);
 
       fetch(`${API_BASE}/informes-list/${rut}/`)
-        .then((res) => {
-          console.log("🔁 Response status:", res.status);
-          return res.json();
-        })
-        .then((data) => {
+        .then(res => res.json())
+        .then(data => {
           console.log("✅ Data recibida:", data);
-          const sorted = [...data].sort(
-            (a, b) => b.numero_biopsia - a.numero_biopsia
-          );
-          setInformes(sorted);
         })
-        .catch((err) => {
-          console.error("❌ Error en fetch:", err);
-          setInformes([]);
-        })
-        .finally(() => setLoading(false));
-    }, []); // ✅ sin 'rut' en dependencias
+        .catch(err => console.error("❌ Error:", err));
+    }, []);
+
 
 
 

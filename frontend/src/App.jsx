@@ -15,14 +15,36 @@ function App() {
       return;
     }
 
-    const API_BASE = window.location.hostname.includes("localhost")
-      ? "http://localhost:8000"
-      : "http://172.16.8.194:8000";
+    // ✅ CORRECCIÓN: Detectar correctamente el entorno
+    const host = window.location.hostname;
+    const port = window.location.port;
+    let API_BASE;
 
-    fetch(`${API_BASE}/api/informes-list/${rut}/`)
-      .then((res) => res.json())
-      .then((data) => setInformes(data))
-      .catch(() => setInformes([]))
+    // Si estamos en desarrollo local (npm start)
+    if (host === "localhost" && port === "3000") {
+      API_BASE = "http://localhost:8000";
+    } 
+    // Si estamos en producción/Docker (accediendo por :8080 o sin puerto)
+    else {
+      API_BASE = "/api";  // ✅ Usar ruta relativa para que nginx maneje el proxy
+    }
+
+    console.log("🌐 API_BASE =", API_BASE);
+    console.log("📡 Fetching:", `${API_BASE}/informes-list/${rut}/`);
+
+    fetch(`${API_BASE}/informes-list/${rut}/`)
+      .then((res) => {
+        console.log("📄 Response status:", res.status);
+        return res.json();
+      })
+      .then((data) => {
+        console.log("✅ Data recibida:", data);
+        setInformes(data);
+      })
+      .catch((err) => {
+        console.error("❌ Error en fetch:", err);
+        setInformes([]);
+      })
       .finally(() => setLoading(false));
   }, []);
 

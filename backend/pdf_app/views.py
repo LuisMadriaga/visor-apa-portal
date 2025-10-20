@@ -10,6 +10,9 @@ import base64
 import re
 import unicodedata
 
+from django.conf import settings
+from pathlib import Path
+
 
 
 def convertir_a_vinetas(texto):
@@ -161,8 +164,19 @@ def listar_informes(request, rut=None):
     if not rows:
         return JsonResponse([], safe=False)
 
-    host = request.get_host()
-    base_url = f"http://{host}"
+    # 🔧 Determinar la URL base correcta considerando Docker
+    from django.conf import settings
+    
+    # Opción 1: Usar variable de entorno (si está configurada)
+    base_url = getattr(settings, 'FRONTEND_URL', None)
+    
+    # Opción 2: Si no hay variable, construir desde request
+    if not base_url:
+        scheme = request.headers.get('X-Forwarded-Proto', 'http')
+        host = request.headers.get('X-Forwarded-Host', request.get_host())
+        base_url = f"{scheme}://{host}"
+    
+    print(f"🔗 Base URL generada: {base_url}")  # Para debug
 
     data = []
     for i, r in enumerate(rows):
@@ -180,7 +194,6 @@ def listar_informes(request, rut=None):
         })
 
     return JsonResponse(data, safe=False)
-
 
 def generar_pdf(request, rut, numero_biopsia):
     """Genera el PDF institucional del informe de anatomía patológica."""
@@ -297,14 +310,29 @@ def generar_pdf(request, rut, numero_biopsia):
     Code128(str(numero_biopsia), writer=ImageWriter()).write(barcode_buffer, options)
     barcode_base64 = base64.b64encode(barcode_buffer.getvalue()).decode("utf-8")
 
+
+
+
     # === 🔹 Render HTML ===
-    html_string = render_to_string(
-        "pdf_informe_apa.html",
-        {"informes": informes, "barcode": barcode_base64},
-    )
+    from django.conf import settings
+    from pathlib import Path
+
+    context = {
+        "informes": informes,
+        "barcode": barcode_base64,
+        "STATIC_ROOT": str(Path(settings.STATIC_ROOT).absolute()),  # 👈 se pasa al template
+    }
+
+    html_string = render_to_string("pdf_informe_apa.html", context)
+
 
     pdf_buffer = BytesIO()
-    HTML(string=html_string, base_url=request.build_absolute_uri("/")).write_pdf(pdf_buffer)
+
+    HTML(
+        string=html_string,
+        base_url=str(Path(settings.STATIC_ROOT).absolute())
+    ).write_pdf(pdf_buffer)
+
     pdf_buffer.seek(0)
 
     response = HttpResponse(pdf_buffer.read(), content_type="application/pdf")

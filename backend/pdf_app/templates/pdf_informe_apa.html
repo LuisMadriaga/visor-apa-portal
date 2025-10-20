@@ -360,7 +360,7 @@
 <!-- CABECERA -->
 <div class="cabecera">
   <div class="logo">
-    <img src="{% static 'img/Logotipo_secundario_sin_slogan.png' %}" alt="Logo FALP" />
+    <img src="file://{{ STATIC_ROOT }}/img/Logotipo_secundario_sin_slogan.png" alt="Logo FALP" style="height:50px;">
   </div>
 
   <div class="titulo">
@@ -574,34 +574,35 @@
 
 <div class="firma-responsable">
   {% if "Buscaglia" in inf.responsable_examen %}
-    <img src="{% static 'firmas/firma_buscaglia.png' %}" alt="Firma Dr. Felipe Buscaglia Fernández" />
+    <img src="file://{{ STATIC_ROOT }}/firmas/firma_buscaglia.png" alt="Firma Dr. Felipe Buscaglia Fernández" />
   {% elif "Meneses" in inf.responsable_examen %}
-    <img src="{% static 'firmas/firma_meneses.png' %}" alt="Firma Dr. Manuel Francisco Meneses Ciuffardi" />
+    <img src="file://{{ STATIC_ROOT }}/firmas/firma_meneses.png" alt="Firma Dr. Manuel Francisco Meneses Ciuffardi" />
   {% elif "Miranda" in inf.responsable_examen %}
-    <img src="{% static 'firmas/firma_miranda.png' %}" alt="Firma Dr. Rubén Miranda Torres" />
+    <img src="file://{{ STATIC_ROOT }}/firmas/firma_miranda.png" alt="Firma Dr. Rubén Miranda Torres" />
   {% elif "Carrasco" in inf.responsable_examen %}
-    <img src="{% static 'firmas/firma_carrasco.png' %}" alt="Firma Dra. Ana María Carrasco Troncoso" />
+    <img src="file://{{ STATIC_ROOT }}/firmas/firma_carrasco.png" alt="Firma Dra. Ana María Carrasco Troncoso" />
   {% elif "Molina" in inf.responsable_examen %}
-    <img src="{% static 'firmas/firma_molina.png' %}" alt="Firma Dra. Carla Molina" />
+    <img src="file://{{ STATIC_ROOT }}/firmas/firma_molina.png" alt="Firma Dra. Carla Molina" />
   {% elif "Tissera" in inf.responsable_examen %}
-    <img src="{% static 'firmas/firma_tissera.png' %}" alt="Firma Dra. Claudia Tissera Garcia" />
+    <img src="file://{{ STATIC_ROOT }}/firmas/firma_tissera.png" alt="Firma Dra. Claudia Tissera García" />
   {% elif "Díaz" in inf.responsable_examen or "Diaz" in inf.responsable_examen %}
-    <img src="{% static 'firmas/firma_diaz.png' %}" alt="Firma Dra. Lidia Díaz" />
+    <img src="file://{{ STATIC_ROOT }}/firmas/firma_diaz.png" alt="Firma Dra. Lidia Díaz" />
   {% elif "Gutiérrez" in inf.responsable_examen or "Gutierrez" in inf.responsable_examen %}
-    <img src="{% static 'firmas/firma_gutierrez.png' %}" alt="Firma Dra. Lorena Gutiérrez Cordero" />
+    <img src="file://{{ STATIC_ROOT }}/firmas/firma_gutierrez.png" alt="Firma Dra. Lorena Gutiérrez Cordero" />
   {% elif "Delgado" in inf.responsable_examen %}
-    <img src="{% static 'firmas/firma_delgado.png' %}" alt="Firma Dra. Magdalena Delgado Barros" />
+    <img src="file://{{ STATIC_ROOT }}/firmas/firma_delgado.png" alt="Firma Dra. Magdalena Delgado Barros" />
   {% elif "Vial" in inf.responsable_examen %}
-    <img src="{% static 'firmas/firma_vial.png' %}" alt="Firma Dra. María Teresa Vial" />
+    <img src="file://{{ STATIC_ROOT }}/firmas/firma_vial.png" alt="Firma Dra. María Teresa Vial" />
   {% elif "Sanhueza" in inf.responsable_examen %}
-    <img src="{% static 'firmas/firma_sanhueza.png' %}" alt="Firma Dra. Verónica Sanhueza Linares" />
+    <img src="file://{{ STATIC_ROOT }}/firmas/firma_sanhueza.png" alt="Firma Dra. Verónica Sanhueza Linares" />
   {% elif "Troncoso" in inf.responsable_examen %}
-    <img src="{% static 'firmas/firma_troncoso.png' %}" alt="Firma Natalia Rosa Troncoso Castillo" />
+    <img src="file://{{ STATIC_ROOT }}/firmas/firma_troncoso.png" alt="Firma Natalia Rosa Troncoso Castillo" />
   {% else %}
-    <img src="{% static 'firmas/firma_generica.png' %}" alt="Firma Responsable Desconocido" />
+    <img src="file://{{ STATIC_ROOT }}/firmas/firma_generica.png" alt="Firma Responsable Desconocido" />
   {% endif %}
   <span>Responsable: {{ inf.responsable_examen }}</span>
 </div>
+
 
 
 
