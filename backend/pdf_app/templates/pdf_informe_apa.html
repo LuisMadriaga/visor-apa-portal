@@ -288,7 +288,6 @@
 }
 
 /* ===== FIRMA RESPONSABLE ===== */
-/* ===== FIRMA RESPONSABLE ===== */
 .firma-responsable {
   position: relative;
   width: 100%;
@@ -335,7 +334,75 @@
   text-decoration: none;     /* sin subrayado */
 }
 
+/* ===== BLOQUE DIAGNÓSTICO FISH ===== */
+.fish-section table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 4px;
+  margin-bottom: 10px;
+}
 
+.fish-section td {
+  padding: 2px 4px;
+  vertical-align: top;
+  font-size: 9pt;
+  color: #000; /* 🔹 texto negro, no azul */
+}
+
+.fish-section .label {
+  width: 40%;
+  font-weight: normal;
+  color: #000;
+  text-align: left;
+}
+
+.fish-section .valor {
+  width: 60%;
+  text-align: left;
+  white-space: pre-wrap; /* 🔹 permite saltos naturales */
+  line-height: 1.25;
+}
+
+.fish-section h3 {
+  text-align: left;
+  font-weight: bold;
+  margin-bottom: 4px;
+  font-size: 10pt;
+  color: #000;
+}
+
+/* === Interpretación USCAP === */
+.interpretacion-uscap {
+  font-size: 7pt;
+  font-style: italic;
+  color: #000;
+  margin-top: 10px;
+}
+
+.interpretacion-uscap h3 {
+  font-style: italic;
+  font-size: 7.5pt;
+  text-decoration: none;
+  margin-bottom: 4px;
+}
+
+.interpretacion-uscap table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.interpretacion-uscap .label {
+  width: 20%;
+  font-weight: normal;
+  text-decoration: none;
+  padding-right: 8px;
+  vertical-align: top;
+}
+
+.interpretacion-uscap .valor {
+  width: 78%;
+  text-decoration: none;
+}
 
 
 
@@ -498,12 +565,18 @@
 </table>
 
 
-
-  
-
-  <div class="titulo-seccion">INFORME ANATOMOPATOLÓGICO</div>
+  {% if es_fish %}
+    <div class="titulo-seccion">
+      INFORME {{ inf.formulario_fish|cut:"DIAGNÓSTICO"|cut:" " }}
+    </div>
+  {% else %}
+    <div class="titulo-seccion">
+      INFORME ANATOMOPATOLÓGICO
+    </div>
+  {% endif %}
 
   {% for inf in informes %}
+
 
   {% if inf.antecendentes_clinicos %}
   <div class="seccion">
@@ -519,14 +592,63 @@
   </div>
   {% endif %}
 
-  {% if inf.conclusion_diagnostica %}
+  {% if inf.examen_microscopico %}
   <div class="seccion">
-    <h3>CONCLUSIÓN DIAGNÓSTICA</h3>
-    <p>{{ inf.conclusion_diagnostica|safe }}</p>
+    <h3>EXAMEN MICROSCÓPICO</h3>
+    <p>{{ inf.examen_microscopico|safe }}</p>
   </div>
   {% endif %}
 
-  {% if inf.cie_morfologico_cod or inf.cie_morfologico_nombre %}
+
+{% if inf.conclusion_diagnostica_pares %}
+<div class="seccion fish-section">
+  <h3>
+    {% if es_fish %}
+      {{ inf.formulario_fish|default:"CONCLUSIÓN DIAGNÓSTICA"|upper }}
+    {% elif inf.tipo_examen and "PAP" in inf.tipo_examen|upper %}
+      TIPO DE FROTIS: {{ inf.tipo_frotis }}
+    {% else %}
+      CONCLUSIÓN DIAGNÓSTICA
+    {% endif %}
+  </h3>
+
+  <table>
+    {% for p in inf.conclusion_diagnostica_pares %}
+      {% if p.label %}
+      <tr>
+        <td class="label">{{ p.label }}:</td>
+        <td class="valor">{{ p.valor }}</td>
+      </tr>
+      {% else %}
+      <tr>
+        <td colspan="2" class="valor">{{ p.valor }}</td>
+      </tr>
+      {% endif %}
+    {% endfor %}
+  </table>
+</div>
+{% endif %}
+
+{% if es_fish and inf.interpretacion or es_fish and inf.referencia %}
+<div class="seccion interpretacion-uscap">
+    {% if inf.referencia %}
+    <tr>
+      <h3 class="valor">{{ inf.referencia }}</h3>
+    </tr>
+    {% endif %}
+  <table>
+    {% if inf.interpretacion %}
+    <tr>
+      <td class="valor">{{ inf.interpretacion }}</td>
+    </tr>
+    {% endif %}
+
+  </table>
+</div>
+{% endif %}
+
+
+{% if inf.cie_morfologico_cod or inf.cie_morfologico_nombre %}
   <div class="seccion">
     <h3>CIE-O Morfológico</h3>
     <p>
@@ -535,18 +657,19 @@
       {% if inf.cie_morfologico_nombre %}{{ inf.cie_morfologico_nombre }}{% endif %}
     </p>
   </div>
-  {% endif %}
+{% endif %}
 
-  {% if inf.d_cie_topografico_cod or inf.cie_topografico_nombre %}
-    <div class="seccion">
-      <h3>CIE-O Topográfico</h3>
-      <p>
-        {% if inf.d_cie_topografico_cod %}{{ inf.d_cie_topografico_cod }}{% endif %}
-        {% if inf.d_cie_topografico_cod and inf.cie_topografico_nombre %} / {% endif %}
-        {% if inf.cie_topografico_nombre %}{{ inf.cie_topografico_nombre }}{% endif %}
-      </p>
-    </div>
-  {% endif %}
+{% if inf.d_cie_topografico_cod or inf.cie_topografico_nombre %}
+  <div class="seccion">
+    <h3>CIE-O Topográfico</h3>
+    <p>
+      {% if inf.d_cie_topografico_cod %}{{ inf.d_cie_topografico_cod }}{% endif %}
+      {% if inf.d_cie_topografico_cod and inf.cie_topografico_nombre %} / {% endif %}
+      {% if inf.cie_topografico_nombre %}{{ inf.cie_topografico_nombre }}{% endif %}
+    </p>
+  </div>
+{% endif %}
+
 
 
   {% if inf.tecnicas_realizadas %}
@@ -572,38 +695,62 @@
   </div>
   {% endif %}
 
-<div class="firma-responsable">
-  {% if "Buscaglia" in inf.responsable_examen %}
-    <img src="file://{{ STATIC_ROOT }}/firmas/firma_buscaglia.png" alt="Firma Dr. Felipe Buscaglia Fernández" />
-  {% elif "Meneses" in inf.responsable_examen %}
-    <img src="file://{{ STATIC_ROOT }}/firmas/firma_meneses.png" alt="Firma Dr. Manuel Francisco Meneses Ciuffardi" />
-  {% elif "Miranda" in inf.responsable_examen %}
-    <img src="file://{{ STATIC_ROOT }}/firmas/firma_miranda.png" alt="Firma Dr. Rubén Miranda Torres" />
-  {% elif "Carrasco" in inf.responsable_examen %}
-    <img src="file://{{ STATIC_ROOT }}/firmas/firma_carrasco.png" alt="Firma Dra. Ana María Carrasco Troncoso" />
-  {% elif "Molina" in inf.responsable_examen %}
-    <img src="file://{{ STATIC_ROOT }}/firmas/firma_molina.png" alt="Firma Dra. Carla Molina" />
-  {% elif "Tissera" in inf.responsable_examen %}
-    <img src="file://{{ STATIC_ROOT }}/firmas/firma_tissera.png" alt="Firma Dra. Claudia Tissera García" />
-  {% elif "Díaz" in inf.responsable_examen or "Diaz" in inf.responsable_examen %}
-    <img src="file://{{ STATIC_ROOT }}/firmas/firma_diaz.png" alt="Firma Dra. Lidia Díaz" />
-  {% elif "Gutiérrez" in inf.responsable_examen or "Gutierrez" in inf.responsable_examen %}
-    <img src="file://{{ STATIC_ROOT }}/firmas/firma_gutierrez.png" alt="Firma Dra. Lorena Gutiérrez Cordero" />
-  {% elif "Delgado" in inf.responsable_examen %}
-    <img src="file://{{ STATIC_ROOT }}/firmas/firma_delgado.png" alt="Firma Dra. Magdalena Delgado Barros" />
-  {% elif "Vial" in inf.responsable_examen %}
-    <img src="file://{{ STATIC_ROOT }}/firmas/firma_vial.png" alt="Firma Dra. María Teresa Vial" />
-  {% elif "Sanhueza" in inf.responsable_examen %}
-    <img src="file://{{ STATIC_ROOT }}/firmas/firma_sanhueza.png" alt="Firma Dra. Verónica Sanhueza Linares" />
-  {% elif "Troncoso" in inf.responsable_examen %}
-    <img src="file://{{ STATIC_ROOT }}/firmas/firma_troncoso.png" alt="Firma Natalia Rosa Troncoso Castillo" />
-  {% else %}
-    <img src="file://{{ STATIC_ROOT }}/firmas/firma_generica.png" alt="Firma Responsable Desconocido" />
+<div class="firma-contenedor" style="display: flex; justify-content: space-between; align-items: center; margin-top: 40px;">
+
+  <!-- 🩸 Izquierda: Citotecnóloga -->
+  {% if inf.usuariocitologia %}
+  <div class="firma-citotecnologa" style="text-align: left;">
+    {% if "Belen Kroxato" in inf.usuariocitologia %}
+      <img src="file://{{ STATIC_ROOT }}/firmas/firma_kroxato.jpg" alt="Firma Belen Kroxato" style="height: 70px;" />
+    {% elif "CARMEN PILAR GONZALEZ RIVERA" in inf.usuariocitologia %}
+      <img src="file://{{ STATIC_ROOT }}/firmas/firma_gonzalez.jpg" alt="Firma Citotecnóloga González" style="height: 70px;" />
+    {% elif "YOLANDA MERINO" in inf.usuariocitologia %}
+      <img src="file://{{ STATIC_ROOT }}/firmas/firma_merino.jpg" alt="Firma Citotecnóloga Merino" style="height: 70px;" />
+    {% elif "CAMILA PAREDES PEREZ" in inf.usuariocitologia %}
+      <img src="file://{{ STATIC_ROOT }}/firmas/firma_paredes.jpg" alt="Firma Citotecnóloga Paredes" style="height: 70px;" />
+    {% endif %}
+    <div style="margin-top: 4px;">
+      <span style="font-size: 11pt; font-weight: bold; display: block;">Citotecnóloga:</span>
+      <span style="font-size: 11pt; font-weight: bold;">{{ inf.usuariocitologia }}</span>
+    </div>
+  </div>
   {% endif %}
-  <span>Responsable: {{ inf.responsable_examen }}</span>
+
+  <!-- 🧬 Derecha: Responsable del examen -->
+  <div class="firma-responsable" style="text-align: right;">
+    {% if "Buscaglia" in inf.responsable_examen %}
+      <img src="file://{{ STATIC_ROOT }}/firmas/firma_buscaglia.png" alt="Firma Dr. Felipe Buscaglia Fernández" style="height: 70px;" />
+    {% elif "Meneses" in inf.responsable_examen %}
+      <img src="file://{{ STATIC_ROOT }}/firmas/firma_meneses.png" alt="Firma Dr. Manuel Francisco Meneses Ciuffardi" style="height: 70px;" />
+    {% elif "Miranda" in inf.responsable_examen %}
+      <img src="file://{{ STATIC_ROOT }}/firmas/firma_miranda.png" alt="Firma Dr. Rubén Miranda Torres" style="height: 70px;" />
+    {% elif "Carrasco" in inf.responsable_examen %}
+      <img src="file://{{ STATIC_ROOT }}/firmas/firma_carrasco.png" alt="Firma Dra. Ana María Carrasco Troncoso" style="height: 70px;" />
+    {% elif "Molina" in inf.responsable_examen %}
+      <img src="file://{{ STATIC_ROOT }}/firmas/firma_molina.png" alt="Firma Dra. Carla Molina" style="height: 70px;" />
+    {% elif "Tissera" in inf.responsable_examen %}
+      <img src="file://{{ STATIC_ROOT }}/firmas/firma_tissera.png" alt="Firma Dra. Claudia Tissera García" style="height: 70px;" />
+    {% elif "Díaz" in inf.responsable_examen or "Diaz" in inf.responsable_examen %}
+      <img src="file://{{ STATIC_ROOT }}/firmas/firma_diaz.png" alt="Firma Dra. Lidia Díaz" style="height: 70px;" />
+    {% elif "Gutiérrez" in inf.responsable_examen or "Gutierrez" in inf.responsable_examen %}
+      <img src="file://{{ STATIC_ROOT }}/firmas/firma_gutierrez.png" alt="Firma Dra. Lorena Gutiérrez Cordero" style="height: 70px;" />
+    {% elif "Delgado" in inf.responsable_examen %}
+      <img src="file://{{ STATIC_ROOT }}/firmas/firma_delgado.png" alt="Firma Dra. Magdalena Delgado Barros" style="height: 70px;" />
+    {% elif "Vial" in inf.responsable_examen %}
+      <img src="file://{{ STATIC_ROOT }}/firmas/firma_vial.png" alt="Firma Dra. María Teresa Vial" style="height: 70px;" />
+    {% elif "Sanhueza" in inf.responsable_examen %}
+      <img src="file://{{ STATIC_ROOT }}/firmas/firma_sanhueza.png" alt="Firma Dra. Verónica Sanhueza Linares" style="height: 70px;" />
+    {% elif "Troncoso" in inf.responsable_examen %}
+      <img src="file://{{ STATIC_ROOT }}/firmas/firma_troncoso.png" alt="Firma Natalia Rosa Troncoso Castillo" style="height: 70px;" />
+    {% else %}
+      <img src="file://{{ STATIC_ROOT }}/firmas/firma_generica.png" alt="Firma Responsable Desconocido" style="height: 70px;" />
+    {% endif %}
+    <div style="margin-top: 4px;">
+      <span style="font-weight: bold; font-size: 11pt;">Citotecnóloga:</span>
+      <span style="font-size: 11pt;">{{ inf.usuariocitologia }}</span>
+    </div>
+  </div>
 </div>
-
-
 
 
 

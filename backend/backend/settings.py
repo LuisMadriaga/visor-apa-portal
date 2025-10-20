@@ -188,4 +188,4 @@ CORS_ALLOWED_ORIGINS = [
 CORS_ALLOW_CREDENTIALS = True
 
 # ✅ Hosts permitidos
-ALLOWED_HOSTS = os.getenv('DJANGO_ALLOWED_HOSTS', '192.168.0.11,localhost,127.0.0.1,host.docker.internal').split(',')
+ALLOWED_HOSTS = os.getenv('DJANGO_ALLOWED_HOSTS', '172.16.8.194,localhost,127.0.0.1,host.docker.internal').split(',')

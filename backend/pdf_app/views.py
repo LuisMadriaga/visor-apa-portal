@@ -13,8 +13,6 @@ import unicodedata
 from django.conf import settings
 from pathlib import Path
 
-
-
 def convertir_a_vinetas(texto):
     """
     Convierte texto con guiones (- ...) en listas HTML con viñetas.
@@ -195,6 +193,7 @@ def listar_informes(request, rut=None):
 
     return JsonResponse(data, safe=False)
 
+
 def generar_pdf(request, rut, numero_biopsia):
     """Genera el PDF institucional del informe de anatomía patológica."""
     con = conectar_Anatomia_Patologica()
@@ -219,9 +218,8 @@ def generar_pdf(request, rut, numero_biopsia):
     informes = [{k.strip().lower(): v for k, v in fila.items()} for fila in informes]
 
     # === 🔧 Limpieza general de datos ===
-# === 🔧 Limpieza general de datos ===
     campos_con_vinetas = [
-        "antecendentes_clinicos", "examen_macroscopico",
+        "antecendentes_clinicos", "examen_macroscopico", "examen_microscopico",
         "conclusion_diagnostica", "informe_complementario"
     ]
 
@@ -230,43 +228,29 @@ def generar_pdf(request, rut, numero_biopsia):
 
     for inf in informes:
         for campo, valor in list(inf.items()):
-            # 1️⃣ Fechas
             if isinstance(valor, datetime):
                 inf[campo] = valor.strftime("%d/%m/%Y %H:%M")
                 continue
 
-            # 2️⃣ Cadenas de texto
             if isinstance(valor, str):
                 v = valor
-
-                # Decodifica escapes hex si existen
                 if r"\'" in v:
                     v = limpiar_caracteres_rtf_hex(v)
-
-                # Si el campo es RTF completo, límpialo con función dedicada
                 if campo.endswith("_rtf"):
                     v = limpiar_rtf(v)
                     campo_limpio = campo.replace("_rtf", "")
                     inf[campo_limpio] = v or inf.get(campo_limpio, "")
                 else:
-                    # Campos narrativos → preservar saltos de línea
                     if campo in campos_con_vinetas:
                         v = v.strip().replace("\r\n", "\n").replace("\r", "\n")
                     else:
                         v = v.strip().replace("\r", "").replace("\n", " ")
 
-                # Limpieza de artefactos invisibles
                 v = SOFT_BAD_CHARS_RE.sub("", v)
                 v = NBSP_RE.sub(" ", v)
                 v = unicodedata.normalize("NFC", v)
                 v = re.sub(r"[ \t]{2,}", " ", v)
-
                 inf[campo] = v
-
-
-
-
-
 
     # === 🔹 Consultar Técnicas Realizadas ===
     cursor = con.cursor()
@@ -286,16 +270,42 @@ def generar_pdf(request, rut, numero_biopsia):
 
     informes[0]["tecnicas_realizadas"] = tecnicas_formateadas
 
-    # === 🔹 Convertir guiones a viñetas ===
+    # === 🔹 Reordenar "Diagnóstico:" al inicio si es examen FISH ===
     for inf in informes:
-        if 'antecendentes_clinicos' in inf:
-            inf['antecendentes_clinicos'] = convertir_a_vinetas(inf['antecendentes_clinicos'])
-        if 'examen_macroscopico' in inf:
-            inf['examen_macroscopico'] = convertir_a_vinetas(inf['examen_macroscopico'])
-        if 'conclusion_diagnostica' in inf:
-            inf['conclusion_diagnostica'] = convertir_a_vinetas(inf['conclusion_diagnostica'])
-        if 'informe_complementario' in inf:
-            inf['informe_complementario'] = convertir_a_vinetas(inf['informe_complementario'])
+        if "FISH" in inf.get("tipo_examen", "").upper():
+            texto = inf.get("conclusion_diagnostica") or ""
+            lineas = [line.strip() for line in texto.splitlines() if line.strip()]
+
+            # Buscar la línea que contiene "Diagnóstico:"
+            diagnostico_line = next((l for l in lineas if l.startswith("Diagnóstico:")), None)
+
+            # Si existe, moverla al principio
+            if diagnostico_line:
+                lineas.remove(diagnostico_line)
+                lineas.insert(0, diagnostico_line)
+
+            # Volver a unir el texto
+            inf["conclusion_diagnostica"] = "\n".join(lineas)
+
+    # === 🔹 Preformatear líneas de conclusión para el template ===
+    for inf in informes:
+        if inf.get("conclusion_diagnostica"):
+            lineas = [l.strip() for l in inf["conclusion_diagnostica"].splitlines() if l.strip()]
+            pares = []
+            for l in lineas:
+                if ":" in l:
+                    etiqueta, valor = l.split(":", 1)
+                    pares.append({"label": etiqueta.strip(), "valor": valor.strip()})
+                else:
+                    pares.append({"label": "", "valor": l.strip()})
+            inf["conclusion_diagnostica_pares"] = pares
+
+
+    # === 🔹 Convertir guiones a viñetas (después de reordenar) ===
+    for inf in informes:
+        for campo in ["antecendentes_clinicos", "examen_macroscopico", "examen_microscopico", "conclusion_diagnostica", "informe_complementario"]:
+            if campo in inf:
+                inf[campo] = convertir_a_vinetas(inf[campo])
 
     # === 🔹 Código de barras ===
     barcode_buffer = BytesIO()
@@ -305,34 +315,34 @@ def generar_pdf(request, rut, numero_biopsia):
         "font_size": 11,
         "quiet_zone": 2.5,
         "text_distance": 6.0,
-        "write_text": True,
+        "write_text": True
     }
     Code128(str(numero_biopsia), writer=ImageWriter()).write(barcode_buffer, options)
     barcode_base64 = base64.b64encode(barcode_buffer.getvalue()).decode("utf-8")
 
+    # === 🔹 Detectar si es examen FISH ===
+    tipo_examen = informes[0].get("tipo_examen", "").upper()
+    es_fish = "DIAGNÓSTICO FISH" in tipo_examen
 
-
+    if es_fish:
+        # 🔹 Agregar campos específicos si existen
+        informes[0]["formulario_fish"] = limpiar_rtf(informes[0].get("formulario_fish", ""))
+        informes[0]["interpretacion"] = limpiar_rtf(informes[0].get("interpretacion", ""))
+        informes[0]["referencia"] = limpiar_rtf(informes[0].get("referencia", ""))
 
     # === 🔹 Render HTML ===
-    from django.conf import settings
-    from pathlib import Path
-
     context = {
         "informes": informes,
         "barcode": barcode_base64,
-        "STATIC_ROOT": str(Path(settings.STATIC_ROOT).absolute()),  # 👈 se pasa al template
+        "STATIC_ROOT": str(Path(settings.STATIC_ROOT).absolute()),
+        "es_fish": es_fish,
     }
 
-    html_string = render_to_string("pdf_informe_apa.html", context)
-
+    template_name = "pdf_informe_apa.html"
+    html_string = render_to_string(template_name, context)
 
     pdf_buffer = BytesIO()
-
-    HTML(
-        string=html_string,
-        base_url=str(Path(settings.STATIC_ROOT).absolute())
-    ).write_pdf(pdf_buffer)
-
+    HTML(string=html_string, base_url=str(Path(settings.STATIC_ROOT).absolute())).write_pdf(pdf_buffer)
     pdf_buffer.seek(0)
 
     response = HttpResponse(pdf_buffer.read(), content_type="application/pdf")
@@ -342,3 +352,5 @@ def generar_pdf(request, rut, numero_biopsia):
     response["Cross-Origin-Opener-Policy"] = "same-origin"
     response["Cross-Origin-Embedder-Policy"] = "require-corp"
     return response
+
+
