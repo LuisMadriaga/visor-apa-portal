@@ -14,6 +14,7 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
+    path("api/pdf/v2/<str:token>/", views.generar_pdf_token, name="pdf_token"),
     path("api/informes-list/<str:rut>/", views.listar_informes, name="listar_informes"),
     path("api/pdf/<str:rut>/<str:numero_biopsia>/", views.generar_pdf, name="generar_pdf"),
 ]

@@ -189,3 +189,11 @@ CORS_ALLOW_CREDENTIALS = True
 
 # ✅ Hosts permitidos
 ALLOWED_HOSTS = os.getenv('DJANGO_ALLOWED_HOSTS', '172.16.8.194,localhost,127.0.0.1,host.docker.internal').split(',')
+
+
+
+from cryptography.fernet import Fernet
+import base64, os
+
+FERNET_KEY = os.environ.get("FERNET_KEY")  # p.ej. export FERNET_KEY='...'
+# Si no existe, genérala una sola vez localmente: Fernet.generate_key().decode()

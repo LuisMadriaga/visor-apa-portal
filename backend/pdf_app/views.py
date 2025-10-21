@@ -13,6 +13,26 @@ import unicodedata
 from django.conf import settings
 from pathlib import Path
 
+
+
+from .crypto_utils import make_pdf_token   # 🔹 Asegúrate de haber creado este módulo
+
+
+
+from django.http import HttpResponse, HttpResponseBadRequest
+from .crypto_utils import parse_pdf_token
+
+def generar_pdf_token(request, token):
+    try:
+        payload = parse_pdf_token(token)
+        rut = payload["rut"]
+        numero_biopsia = payload["num"]
+    except Exception:
+        return HttpResponseBadRequest("Enlace inválido o expirado.")
+    # Reutiliza tu lógica actual:
+    return generar_pdf(request, rut, numero_biopsia)
+
+
 def convertir_a_vinetas(texto):
     """
     Convierte texto con guiones (- ...) en listas HTML con viñetas.
@@ -86,7 +106,6 @@ def limpiar_caracteres_rtf_hex(texto):
     texto = unicodedata.normalize("NFC", texto)
 
     return texto.strip()
-
 
 
 def limpiar_rtf(texto):
@@ -163,36 +182,41 @@ def listar_informes(request, rut=None):
         return JsonResponse([], safe=False)
 
     # 🔧 Determinar la URL base correcta considerando Docker
-    from django.conf import settings
-    
-    # Opción 1: Usar variable de entorno (si está configurada)
-    base_url = getattr(settings, 'FRONTEND_URL', None)
-    
-    # Opción 2: Si no hay variable, construir desde request
+    base_url = getattr(settings, "FRONTEND_URL", None)
     if not base_url:
-        scheme = request.headers.get('X-Forwarded-Proto', 'http')
-        host = request.headers.get('X-Forwarded-Host', request.get_host())
+        scheme = request.headers.get("X-Forwarded-Proto", "http")
+        host = request.headers.get("X-Forwarded-Host", request.get_host())
         base_url = f"{scheme}://{host}"
-    
-    print(f"🔗 Base URL generada: {base_url}")  # Para debug
+
+    print(f"🔗 Base URL generada: {base_url}")
 
     data = []
     for i, r in enumerate(rows):
         numero_biopsia, nombre, rut_value, servicio, medico, fecha = r
         rut_value = rut_value.strip() if rut_value else ""
+
+        # 🔐 Generar token cifrado del RUT + número de biopsia
+        token = None
+        if rut_value and numero_biopsia:
+            try:
+                token = make_pdf_token(rut_value, numero_biopsia)
+            except Exception as e:
+                print(f"⚠️ Error generando token para {rut_value}: {e}")
+                token = None
+
         data.append({
             "id": i + 1,
             "numero_biopsia": numero_biopsia,
             "nombre": nombre,
-            "rut": rut_value,
+            "rut": rut_value,  # el RUT real sigue visible en la lista por ahora
             "servicio": servicio,
             "medico": medico,
             "fecha": fecha.strftime("%d/%m/%Y %H:%M") if fecha else "",
-            "url": f"{base_url}/api/pdf/{rut_value}/{numero_biopsia}/" if rut_value and numero_biopsia else None
+            # 🔗 Nueva URL cifrada
+            "url": f"{base_url}/api/pdf/v2/{token}/" if token else None
         })
 
     return JsonResponse(data, safe=False)
-
 
 def generar_pdf(request, rut, numero_biopsia):
     """Genera el PDF institucional del informe de anatomía patológica."""
