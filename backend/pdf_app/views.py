@@ -9,6 +9,7 @@ from io import BytesIO
 import base64
 import re
 import unicodedata
+import json
 
 from django.conf import settings
 from pathlib import Path
@@ -32,6 +33,97 @@ def generar_pdf_token(request, token):
     # Reutiliza tu lógica actual:
     return generar_pdf(request, rut, numero_biopsia)
 
+
+# views.py (agregar al inicio)
+from django.views.decorators.csrf import csrf_exempt
+from .crypto_utils import make_access_token, parse_access_token
+from cryptography.fernet import InvalidToken
+
+# views.py
+from django.views.decorators.http import require_http_methods
+from functools import wraps
+
+def require_api_key(view_func):
+    """Decorator para validar API key."""
+    @wraps(view_func)
+    def wrapper(request, *args, **kwargs):
+        api_key = request.headers.get("X-API-Key")
+        expected_key = getattr(settings, "API_KEY", None)
+        
+        if not expected_key or api_key != expected_key:
+            return JsonResponse({"error": "No autorizado"}, status=403)
+        
+        return view_func(request, *args, **kwargs)
+    return wrapper
+
+@csrf_exempt
+@require_api_key  # 🔹 Agregar protección
+def generate_access_token(request):
+    """
+    Genera un token de acceso cifrado para un RUT.
+    POST /api/generate-access-token/
+    Body: {"rut": "12345678-9"}
+    """
+    if request.method != "POST":
+        return JsonResponse({"error": "Método no permitido"}, status=405)
+    
+    try:
+        data = json.loads(request.body)
+        rut = data.get("rut", "").strip()
+        
+        if not rut:
+            return JsonResponse({"error": "RUT requerido"}, status=400)
+        
+        token = make_access_token(rut)
+        
+        # Generar URL completa
+        base_url = getattr(settings, "FRONTEND_URL", None)
+        if not base_url:
+            scheme = request.headers.get("X-Forwarded-Proto", "http")
+            host = request.headers.get("X-Forwarded-Host", request.get_host())
+            base_url = f"{scheme}://{host}"
+        
+        access_url = f"{base_url}/?token={token}"
+        
+        return JsonResponse({
+            "success": True,
+            "token": token,
+            "url": access_url,
+            "expires_in_seconds": 86400  # 24h
+        })
+    
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
+
+
+def validate_access_token(request):
+    """
+    Valida un token de acceso y devuelve el RUT.
+    GET /api/validate-access/?token=xxxxx
+    """
+    token = request.GET.get("token", "").strip()
+    
+    if not token:
+        return JsonResponse({"error": "Token requerido"}, status=400)
+    
+    try:
+        payload = parse_access_token(token)
+        return JsonResponse({
+            "valid": True,
+            "rut": payload["rut"]
+        })
+    
+    except InvalidToken:
+        return JsonResponse({
+            "valid": False,
+            "error": "Token inválido o expirado"
+        }, status=401)
+    
+    except Exception as e:
+        return JsonResponse({
+            "valid": False,
+            "error": "Error al validar token"
+        }, status=500)
 
 def convertir_a_vinetas(texto):
     """

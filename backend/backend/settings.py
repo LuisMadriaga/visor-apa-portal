@@ -197,3 +197,5 @@ import base64, os
 
 FERNET_KEY = os.environ.get("FERNET_KEY")  # p.ej. export FERNET_KEY='...'
 # Si no existe, genérala una sola vez localmente: Fernet.generate_key().decode()
+
+API_KEY = os.environ.get("API_KEY", "tu-clave-secreta-aqui")

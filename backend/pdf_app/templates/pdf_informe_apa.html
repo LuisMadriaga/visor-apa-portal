@@ -695,28 +695,30 @@
   </div>
   {% endif %}
 
+<!-- ======== BLOQUE DE FIRMAS ======== -->
 <div class="firma-contenedor" style="display: flex; justify-content: space-between; align-items: center; margin-top: 40px;">
 
   <!-- 🩸 Izquierda: Citotecnóloga -->
   {% if inf.usuariocitologia %}
-  <div class="firma-citotecnologa" style="text-align: left;">
-    {% if "Belen Kroxato" in inf.usuariocitologia %}
-      <img src="file://{{ STATIC_ROOT }}/firmas/firma_kroxato.jpg" alt="Firma Belen Kroxato" style="height: 70px;" />
-    {% elif "CARMEN PILAR GONZALEZ RIVERA" in inf.usuariocitologia %}
-      <img src="file://{{ STATIC_ROOT }}/firmas/firma_gonzalez.jpg" alt="Firma Citotecnóloga González" style="height: 70px;" />
-    {% elif "YOLANDA MERINO" in inf.usuariocitologia %}
-      <img src="file://{{ STATIC_ROOT }}/firmas/firma_merino.jpg" alt="Firma Citotecnóloga Merino" style="height: 70px;" />
-    {% elif "CAMILA PAREDES PEREZ" in inf.usuariocitologia %}
-      <img src="file://{{ STATIC_ROOT }}/firmas/firma_paredes.jpg" alt="Firma Citotecnóloga Paredes" style="height: 70px;" />
-    {% endif %}
-    <div style="margin-top: 4px;">
-      <span style="font-size: 11pt; font-weight: bold; display: block;">Citotecnóloga:</span>
-      <span style="font-size: 11pt; font-weight: bold;">{{ inf.usuariocitologia }}</span>
+    <div class="firma-citotecnologa" style="text-align: left;">
+      {% if "Belen Kroxato" in inf.usuariocitologia %}
+        <img src="file://{{ STATIC_ROOT }}/firmas/firma_kroxato.jpg" alt="Firma Belén Kroxato" style="height: 70px;" />
+      {% elif "CARMEN PILAR GONZALEZ RIVERA" in inf.usuariocitologia %}
+        <img src="file://{{ STATIC_ROOT }}/firmas/firma_gonzalez.jpg" alt="Firma Citotecnóloga González" style="height: 70px;" />
+      {% elif "YOLANDA MERINO" in inf.usuariocitologia %}
+        <img src="file://{{ STATIC_ROOT }}/firmas/firma_merino.jpg" alt="Firma Citotecnóloga Merino" style="height: 70px;" />
+      {% elif "CAMILA PAREDES PEREZ" in inf.usuariocitologia %}
+        <img src="file://{{ STATIC_ROOT }}/firmas/firma_paredes.jpg" alt="Firma Citotecnóloga Paredes" style="height: 70px;" />
+      {% endif %}
+      <div style="margin-top: 4px;">
+        <span style="font-size: 11pt; font-weight: bold;">Citotecnóloga:</span>
+        <div style="font-size: 11pt; font-weight: bold; margin-top: 2px;">{{ inf.usuariocitologia }}</div>
+      </div>
     </div>
-  </div>
   {% endif %}
 
   <!-- 🧬 Derecha: Responsable del examen -->
+  {% if inf.responsable_examen %}
   <div class="firma-responsable" style="text-align: right;">
     {% if "Buscaglia" in inf.responsable_examen %}
       <img src="file://{{ STATIC_ROOT }}/firmas/firma_buscaglia.png" alt="Firma Dr. Felipe Buscaglia Fernández" style="height: 70px;" />
@@ -746,11 +748,13 @@
       <img src="file://{{ STATIC_ROOT }}/firmas/firma_generica.png" alt="Firma Responsable Desconocido" style="height: 70px;" />
     {% endif %}
     <div style="margin-top: 4px;">
-      <span style="font-weight: bold; font-size: 11pt;">Citotecnóloga:</span>
-      <span style="font-size: 11pt;">{{ inf.usuariocitologia }}</span>
+      <span style="font-size: 11pt; font-weight: bold;">Responsable:</span>
+      <span style="font-size: 11pt;">{{ inf.responsable_examen }}</span>
     </div>
   </div>
+  {% endif %}
 </div>
+
 
 
 
