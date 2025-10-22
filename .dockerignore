@@ -1,26 +1,52 @@
-# Node / React
-node_modules
-build
-dist
-.env
-.env.*
-npm-debug.log
-yarn-debug.log
-yarn-error.log
+# ===============================
+# 🧩 FRONTEND (React / Node)
+# ===============================
+frontend/node_modules
+frontend/build
+frontend/dist
+frontend/.env
+frontend/.env.*
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*
 
-# Git
-.git
-.gitignore
-.DS_Store
-
-# Python / Backend
-__pycache__
+# ===============================
+# 🐍 BACKEND (Django / Python)
+# ===============================
+__pycache__/
 *.pyc
 *.pyo
-
-# Sistema / IDE
-.vscode
-.idea
+*.pyd
+*.sqlite3
+*.db
+*.log
+*.bak
 *.swp
 *.swo
+
+# Archivos de entorno
+.env
+.env.*
+!.env.example  # Si tienes un ejemplo de entorno, mantenlo
+
+# ===============================
+# 🧰 SISTEMA / IDE / GIT
+# ===============================
+.git
+.gitignore
+.vscode
+.idea
+.DS_Store
 Thumbs.db
+
+# ===============================
+# 🗂️ Otros
+# ===============================
+# Evita enviar archivos innecesarios al contexto de Docker
+*.zip
+*.tar
+*.gz
+*.tgz
+*.rar
+*.bak
+*.tmp

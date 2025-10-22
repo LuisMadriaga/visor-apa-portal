@@ -1,72 +1,105 @@
+// App.jsx (CORRECTO)
 import React, { useEffect, useState } from "react";
 import VisorReportes from "./components/VisorReportes";
 
 function App() {
   const [informes, setInformes] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [rutPaciente, setRutPaciente] = useState(null);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    const rut = params.get("rut");
-    setRutPaciente(rut);
-    if (!rut) {
+    const token = params.get("token");
+
+    if (!token) {
+      setError("⚠️ Falta el parámetro token en la URL");
       setLoading(false);
       return;
     }
 
-    // ✅ CORRECCIÓN: Detectar correctamente el entorno
     const host = window.location.hostname;
     const port = window.location.port;
     let API_BASE;
 
-    // Si estamos en desarrollo local (npm start)
     if (host === "localhost" && port === "3000") {
       API_BASE = "http://localhost:8000";
-    } 
-    // Si estamos en producción/Docker (accediendo por :8080 o sin puerto)
-    else {
-      API_BASE = "/api";  // ✅ Usar ruta relativa para que nginx maneje el proxy
+    } else {
+      API_BASE = "/api";
     }
 
     console.log("🌐 API_BASE =", API_BASE);
-    console.log("📡 Fetching:", `${API_BASE}/informes-list/${rut}/`);
 
-    fetch(`${API_BASE}/informes-list/${rut}/`)
+    // 🔹 Validar token y obtener informes
+    fetch(`${API_BASE}/validate-access/?token=${encodeURIComponent(token)}`)
+      .then((res) => {
+        if (!res.ok) {
+          throw new Error("Token inválido o expirado");
+        }
+        return res.json();
+      })
+      .then((data) => {
+        if (!data.valid) {
+          throw new Error(data.error || "Token no válido");
+        }
+
+        const rut = data.rut;
+        console.log("✅ RUT descifrado:", rut);
+        setRutPaciente(rut);
+
+        return fetch(`${API_BASE}/informes-list/${rut}/`);
+      })
       .then((res) => {
         console.log("📄 Response status:", res.status);
+        if (!res.ok) {
+          throw new Error(`Error ${res.status}: ${res.statusText}`);
+        }
         return res.json();
       })
       .then((data) => {
         console.log("✅ Data recibida:", data);
+        console.log("✅ Cantidad de informes:", data.length);
         setInformes(data);
       })
       .catch((err) => {
-        console.error("❌ Error en fetch:", err);
+        console.error("❌ Error:", err);
+        setError(err.message);
         setInformes([]);
       })
-      .finally(() => setLoading(false));
+      .finally(() => {
+        console.log("🏁 Finalizando carga");
+        setLoading(false);
+      });
   }, []);
 
-  if (loading)
+  if (loading) {
     return (
-      <p style={{ textAlign: "center", marginTop: "3rem" }}>Cargando...</p>
+      <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh", background: "#f1f5f9" }}>
+        <p style={{ fontSize: "1.2rem", color: "#00558a" }}>⏳ Cargando...</p>
+      </div>
     );
+  }
 
-  if (!rutPaciente)
+  if (error) {
     return (
-      <p style={{ textAlign: "center", marginTop: "3rem" }}>
-        ⚠️ Falta el parámetro <strong>rut</strong> en la URL.
-      </p>
+      <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", height: "100vh", background: "#f1f5f9" }}>
+        <h3 style={{ color: "#d32f2f", marginBottom: "1rem" }}>❌ Error</h3>
+        <p style={{ fontSize: "1.1rem", color: "#555" }}>{error}</p>
+      </div>
     );
+  }
 
-  if (!informes.length)
+  if (!informes || informes.length === 0) {
     return (
-      <p style={{ textAlign: "center", marginTop: "3rem" }}>
-        No se encontraron informes para el RUT {rutPaciente}.
-      </p>
+      <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh", background: "#f1f5f9" }}>
+        <p style={{ fontSize: "1.2rem", color: "#555" }}>
+          ⚠️ No se encontraron informes para el paciente.
+        </p>
+      </div>
     );
+  }
 
+  // 🔹 AQUÍ ESTÁ EL PROBLEMA: Pasar los informes como prop
   return <VisorReportes informes={informes} />;
 }
 

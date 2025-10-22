@@ -2,7 +2,7 @@ services:
   apa_backend:
     build:
       context: .
-      target: backend        # 👈 construye solo la etapa Python
+      target: build_backend
     container_name: apa_backend
     restart: always
     env_file:
@@ -10,8 +10,8 @@ services:
     command: ["gunicorn", "backend.wsgi:application", "--bind", "0.0.0.0:8080"]
     environment:
       - DJANGO_SETTINGS_MODULE=backend.settings
-      - FRONTEND_URL=http://192.168.0.11:8080  # ✅ URL base para generar links
-      - DJANGO_ALLOWED_HOSTS=192.168.0.11,localhost,apa_backend  # ✅ Hosts permitidos
+      - FRONTEND_URL=http://172.16.8.194:8080  # ✅ URL base para generar links
+      - DJANGO_ALLOWED_HOSTS=172.16.8.194,localhost,apa_backend  # ✅ Hosts permitidos
     volumes:
       - ./backend:/app/backend
       - ./static:/app/static

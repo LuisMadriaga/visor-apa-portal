@@ -11,3 +11,7 @@
   <img src="{% static 'img/firma_meneses.png' %}" alt="Firma Dr. Meneses" />
   <span>Responsable: {{ inf.responsable_examen }}</span>
 </div>
+
+
+
+docker network create sistemas_network

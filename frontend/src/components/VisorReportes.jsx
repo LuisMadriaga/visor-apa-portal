@@ -1,18 +1,10 @@
+// VisorReportes.jsx (CORREGIDO FINAL)
 import { useEffect, useState, useRef } from "react";
 import * as pdfjsLib from "pdfjs-dist";
 
-// Usar worker local desde la carpeta public
 pdfjsLib.GlobalWorkerOptions.workerSrc = `${window.location.origin}/pdf.worker.min.mjs`;
 
-// Alternativa: Para desarrollo local con Vite
-// pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
-//   "pdfjs-dist/build/pdf.worker.min.mjs",
-//   import.meta.url
-// ).toString();
-
-export default function VisorReportes() {
-  const [informes, setInformes] = useState([]);
-  const [loading, setLoading] = useState(true);
+export default function VisorReportes({ informes }) {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
@@ -25,63 +17,14 @@ export default function VisorReportes() {
       setIsMobile(mobile);
       if (mobile) setSidebarOpen(false);
     };
-    
     checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
+  // Renderizar miniatura PDF
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const rut = params.get("rut");  // ✅ toma el rut desde la URL
-
-    const host = window.location.hostname;
-    const port = window.location.port;
-    let API_BASE;
-
-    // ✅ Configuración correcta para Docker y desarrollo local
-    if (host === "localhost" && port === "3000") {
-      API_BASE = "http://localhost:8000";  // solo para desarrollo
-    } else {
-      API_BASE = "/api";  // ✅ Nginx hace el proxy
-    }
-
-    console.log("🌐 API_BASE =", API_BASE);
-    console.log("📡 Fetching:", `${API_BASE}/informes-list/${rut}/`);
-
-    fetch(`${API_BASE}/informes-list/${rut}/`)
-      .then((res) => {
-        console.log("📄 Response status:", res.status);
-        return res.json();
-      })
-      .then((data) => {
-        console.log("✅ Data recibida:", data);
-
-        // 🔧 Corregir URLs de PDFs para incluir el puerto correcto (solo si aplica)
-        const correctedData = data.map(item => {
-          if (item.url && !item.url.includes(':8080')) {
-            item.url = item.url.replace(
-              'http://172.16.8.194/',
-              'http://172.16.8.194:8080/'
-            );
-          }
-          return item;
-        });
-
-        const sorted = [...correctedData].sort(
-          (a, b) => b.numero_biopsia - a.numero_biopsia
-        );
-        setInformes(sorted);
-      })
-      .catch((err) => {
-        console.error("❌ Error al obtener informes:", err);
-      })
-      .finally(() => setLoading(false));
-  }, []); // ✅ sin 'rut' en dependencias
-
-  // 🖼️ Renderizar miniatura (primera página)
-  useEffect(() => {
-    if (!informes.length) return;
+    if (!informes || informes.length === 0) return;
 
     const pdfUrl = informes[selectedIndex].url;
     const canvas = canvasRef.current;
@@ -91,7 +34,6 @@ export default function VisorReportes() {
     canvas.width = 0;
     canvas.height = 0;
 
-    // 🧩 Cargar PDF y mantener referencia al worker
     const loadingTask = pdfjsLib.getDocument(pdfUrl);
     let pageInstance = null;
 
@@ -99,7 +41,6 @@ export default function VisorReportes() {
       .then((pdf) => pdf.getPage(1))
       .then((page) => {
         pageInstance = page;
-        // Escala adaptativa según el tamaño de pantalla
         const scale = isMobile ? 1.5 : 1.2;
         const viewport = page.getViewport({ scale });
         canvas.width = viewport.width;
@@ -108,17 +49,15 @@ export default function VisorReportes() {
         page.render(renderContext);
       })
       .catch((err) => {
-        // 🚫 Ignorar "Worker was destroyed", mostrar los demás
         if (err && err.message !== "Worker was destroyed") {
           console.error("Error al generar miniatura PDF:", err);
         }
       });
 
-    // 🧹 Limpieza
     return () => {
       try {
-        loadingTask.destroy(); // ✅ Cierra el worker
-        if (pageInstance) pageInstance.cleanup(); // limpia memoria
+        loadingTask.destroy();
+        if (pageInstance) pageInstance.cleanup();
       } catch (e) {
         if (!/Worker was destroyed/.test(e.message)) {
           console.warn("Error al cerrar worker:", e.message);
@@ -127,18 +66,21 @@ export default function VisorReportes() {
     };
   }, [informes, selectedIndex, isMobile]);
 
-  if (loading) {
+  // Validación temprana
+  if (!informes || informes.length === 0) {
     return (
-      <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh", background: "#f1f5f9" }}>
-        <p style={{ fontSize: "1.2rem", color: "#00558a" }}>⏳ Cargando informes...</p>
-      </div>
-    );
-  }
-
-  if (!informes.length) {
-    return (
-      <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh", background: "#f1f5f9" }}>
-        <p style={{ fontSize: "1.2rem", color: "#555" }}>⚠️ No hay informes disponibles.</p>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          height: "100vh",
+          background: "#f1f5f9",
+        }}
+      >
+        <p style={{ fontSize: "1.2rem", color: "#555" }}>
+          ⚠️ No hay informes disponibles.
+        </p>
       </div>
     );
   }
@@ -146,7 +88,14 @@ export default function VisorReportes() {
   const selectedInforme = informes[selectedIndex];
 
   return (
-    <div style={{ display: "flex", height: "100vh", background: "#f1f5f9", overflow: "hidden" }}>
+    <div
+      style={{
+        display: "flex",
+        height: "100vh",
+        background: "#f1f5f9",
+        overflow: "hidden",
+      }}
+    >
       {/* Botón toggle móvil */}
       {isMobile && (
         <button
@@ -158,7 +107,7 @@ export default function VisorReportes() {
             zIndex: 1000,
             background: "#003366",
             color: "#fff",
-            border: "none",
+            border: "2px solid #FFD700",        // 🟡 borde amarillo
             borderRadius: "50%",
             width: "48px",
             height: "48px",
@@ -166,14 +115,21 @@ export default function VisorReportes() {
             alignItems: "center",
             justifyContent: "center",
             cursor: "pointer",
-            boxShadow: "0 2px 8px rgba(0,0,0,0.3)",
-            transition: "left 0.3s ease",
+            boxShadow: "0 0 10px rgba(255, 215, 0, 0.5)", // ✨ brillo opcional
+            transition: "left 0.3s ease, box-shadow 0.3s ease",
             fontSize: "1.5rem",
             fontWeight: "bold",
           }}
+          onMouseOver={(e) =>
+            (e.currentTarget.style.boxShadow = "0 0 15px rgba(255, 215, 0, 0.8)")
+          }
+          onMouseOut={(e) =>
+            (e.currentTarget.style.boxShadow = "0 0 10px rgba(255, 215, 0, 0.5)")
+          }
         >
           {sidebarOpen ? "‹" : "›"}
         </button>
+
       )}
 
       {/* Sidebar */}
@@ -192,9 +148,29 @@ export default function VisorReportes() {
       >
         {sidebarOpen && (
           <div style={{ padding: "1rem" }}>
-            <h3 style={{ margin: "0 0 1rem 0", color: "#003366", fontSize: "1.1rem", borderBottom: "2px solid #003366", paddingBottom: "0.5rem" }}>
+            <h3
+              style={{
+                margin: "0 0 1rem 0",
+                color: "#003366",
+                fontSize: "1.1rem",
+                borderBottom: "2px solid #003366",
+                paddingBottom: "0.5rem",
+              }}
+            >
               Informes ({informes.length})
             </h3>
+            {informes.length > 0 && (
+              <p
+                style={{
+                  fontSize: "14px",
+                  fontWeight: "500",
+                  marginTop: "4px",
+                  color: "#333",
+                }}
+              >
+                Paciente: {informes[0].nombre} • {informes[0].rut}
+              </p>
+            )}
             {informes.map((inf, index) => (
               <div
                 key={`${inf.numero_biopsia}-${index}`}
@@ -205,14 +181,24 @@ export default function VisorReportes() {
                 style={{
                   padding: "0.75rem",
                   marginBottom: "0.5rem",
-                  background: selectedIndex === index ? "#e3f2fd" : "#f8f9fa",
-                  border: selectedIndex === index ? "2px solid #003366" : "1px solid #e0e0e0",
+                  background:
+                    selectedIndex === index ? "#e3f2fd" : "#f8f9fa",
+                  border:
+                    selectedIndex === index
+                      ? "2px solid #003366"
+                      : "1px solid #e0e0e0",
                   borderRadius: "8px",
                   cursor: "pointer",
                   transition: "all 0.2s ease",
                 }}
               >
-                <div style={{ fontWeight: "600", color: "#003366", fontSize: "0.95rem" }}>
+                <div
+                  style={{
+                    fontWeight: "600",
+                    color: "#003366",
+                    fontSize: "0.95rem",
+                  }}
+                >
                   Biopsia N° {inf.numero_biopsia}
                 </div>
                 <div style={{ fontSize: "0.8rem", color: "#666" }}>
@@ -228,40 +214,70 @@ export default function VisorReportes() {
       </div>
 
       {/* Área principal */}
-      <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
-        {/* Encabezado */}
+      <div
+        style={{
+          flex: 1,
+          display: "flex",
+          flexDirection: "column",
+          overflow: "hidden",
+        }}
+      >
+        {/* Encabezado responsivo */}
         <div
           style={{
             display: "flex",
+            flexDirection: isMobile ? "column" : "row",
             alignItems: "center",
-            justifyContent: "center",
-            position: "relative",
+            justifyContent: isMobile ? "center" : "space-between",
             padding: "0.8rem 1rem",
             background: "#0b2b5b",
             color: "#fff",
             width: "100%",
             flexShrink: 0,
             boxShadow: "0 2px 8px rgba(0,0,0,0.2)",
+            textAlign: isMobile ? "center" : "left",
+            gap: isMobile ? "0.4rem" : "1rem",
           }}
         >
-          {/* Logo FALP alineado a la izquierda */}
+          {/* Logo */}
           <img
-            src={`http://172.16.8.194:8080/static/img/logo_falp4.png?v=${Date.now()}`}
+            src={`/static/img/logo_falp4.png?v=${Date.now()}`}
             alt="Logo FALP"
             style={{
-              position: "absolute",
-              left: "20px",
-              height: "42px",
+              height: isMobile ? "34px" : "42px",
               objectFit: "contain",
+              marginBottom: isMobile ? "0.3rem" : "0",
             }}
           />
 
-          {/* Texto centrado */}
-          <div style={{ textAlign: "center" }}>
-            <h3 style={{ margin: 0, fontWeight: "bold" }}>
-              Biopsia N° {selectedInforme.numero_biopsia} ({selectedIndex + 1} de {informes.length})
+          {/* Texto central */}
+          <div
+            style={{
+              flex: isMobile ? "0 0 auto" : "1 1 auto",
+              textAlign: isMobile ? "center" : "left", // 🔹 cambia "right" por "left"
+              lineHeight: 1.2,
+              paddingLeft: isMobile ? "0.0rem" : "1rem", // 🔹 mueve un poco a la izquierda
+              paddingRight: isMobile ? "0.5rem" : "0.8rem", // 🔹 deja un respiro visual
+            }}
+          >
+
+            <h3
+              style={{
+                margin: 0,
+                fontWeight: "bold",
+                fontSize: isMobile ? "0.95rem" : "1rem",
+              }}
+            >
+              Biopsia N° {selectedInforme.numero_biopsia} ({selectedIndex + 1}{" "}
+              de {informes.length})
             </h3>
-            <p style={{ margin: 0, fontSize: "0.9rem", opacity: 0.9 }}>
+            <p
+              style={{
+                margin: 0,
+                fontSize: "0.9rem",
+                opacity: 0.9,
+              }}
+            >
               Paciente: {selectedInforme.nombre} • {selectedInforme.rut}
             </p>
           </div>
@@ -306,10 +322,14 @@ export default function VisorReportes() {
               boxShadow: "0 3px 8px rgba(0,0,0,0.2)",
               transition: "background 0.3s ease",
             }}
-            onMouseOver={(e) => (e.currentTarget.style.background = "#004c99")}
-            onMouseOut={(e) => (e.currentTarget.style.background = "#003366")}
+            onMouseOver={(e) =>
+              (e.currentTarget.style.background = "#004c99")
+            }
+            onMouseOut={(e) =>
+              (e.currentTarget.style.background = "#003366")
+            }
           >
-            🔍 Ver informe completo
+            📄 Ver informe completo
           </button>
         </div>
       </div>
