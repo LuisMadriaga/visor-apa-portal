@@ -1,4 +1,4 @@
-from django.http import HttpResponse, JsonResponse
+from django.http import HttpResponse, JsonResponse, HttpResponseBadRequest
 from django.template.loader import render_to_string
 from weasyprint import HTML
 from backend.conexiones import conectar_Anatomia_Patologica
@@ -10,18 +10,15 @@ import base64
 import re
 import unicodedata
 import json
-
+import os
 from django.conf import settings
 from pathlib import Path
+from .crypto_utils import make_pdf_token, parse_pdf_token, make_access_token, parse_access_token  
+from django.views.decorators.csrf import csrf_exempt
+from cryptography.fernet import InvalidToken
+from django.views.decorators.http import require_http_methods
+from functools import wraps
 
-
-
-from .crypto_utils import make_pdf_token   # 🔹 Asegúrate de haber creado este módulo
-
-
-
-from django.http import HttpResponse, HttpResponseBadRequest
-from .crypto_utils import parse_pdf_token
 
 def generar_pdf_token(request, token):
     try:
@@ -30,18 +27,8 @@ def generar_pdf_token(request, token):
         numero_biopsia = payload["num"]
     except Exception:
         return HttpResponseBadRequest("Enlace inválido o expirado.")
-    # Reutiliza tu lógica actual:
+
     return generar_pdf(request, rut, numero_biopsia)
-
-
-# views.py (agregar al inicio)
-from django.views.decorators.csrf import csrf_exempt
-from .crypto_utils import make_access_token, parse_access_token
-from cryptography.fernet import InvalidToken
-
-# views.py
-from django.views.decorators.http import require_http_methods
-from functools import wraps
 
 def require_api_key(view_func):
     """Decorator para validar API key."""
@@ -57,7 +44,7 @@ def require_api_key(view_func):
     return wrapper
 
 @csrf_exempt
-@require_api_key  # 🔹 Agregar protección
+@require_api_key  
 def generate_access_token(request):
     """
     Genera un token de acceso cifrado para un RUT.
@@ -94,7 +81,6 @@ def generate_access_token(request):
     
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
-
 
 def validate_access_token(request):
     """
@@ -168,7 +154,6 @@ def convertir_a_vinetas(texto):
     
     return '\n'.join(resultado)
 
-
 def limpiar_caracteres_rtf_hex(texto):
     """
     Decodifica caracteres hexadecimales RTF y elimina combinaciones problemáticas
@@ -199,7 +184,6 @@ def limpiar_caracteres_rtf_hex(texto):
 
     return texto.strip()
 
-
 def limpiar_rtf(texto):
     """
     Limpia texto RTF: remueve comandos y codificación,
@@ -226,8 +210,6 @@ def limpiar_rtf(texto):
     texto = re.sub(r"[ \t]{2,}", " ", texto)
 
     return texto.strip()
-
-
 
 def listar_informes(request, rut=None):
     """Devuelve lista resumida de informes disponibles."""
@@ -300,15 +282,16 @@ def listar_informes(request, rut=None):
             "id": i + 1,
             "numero_biopsia": numero_biopsia,
             "nombre": nombre,
-            "rut": rut_value,  # el RUT real sigue visible en la lista por ahora
+            "rut": rut_value,  
             "servicio": servicio,
             "medico": medico,
             "fecha": fecha.strftime("%d/%m/%Y %H:%M") if fecha else "",
             # 🔗 Nueva URL cifrada
-            "url": f"{base_url}/api/pdf/v2/{token}/" if token else None
+            "url": f"/visor_apa_portal/api/pdf/v2/{token}/" if token else None
         })
 
     return JsonResponse(data, safe=False)
+
 
 def generar_pdf(request, rut, numero_biopsia):
     """Genera el PDF institucional del informe de anatomía patológica."""
@@ -391,16 +374,10 @@ def generar_pdf(request, rut, numero_biopsia):
         if "FISH" in inf.get("tipo_examen", "").upper():
             texto = inf.get("conclusion_diagnostica") or ""
             lineas = [line.strip() for line in texto.splitlines() if line.strip()]
-
-            # Buscar la línea que contiene "Diagnóstico:"
             diagnostico_line = next((l for l in lineas if l.startswith("Diagnóstico:")), None)
-
-            # Si existe, moverla al principio
             if diagnostico_line:
                 lineas.remove(diagnostico_line)
                 lineas.insert(0, diagnostico_line)
-
-            # Volver a unir el texto
             inf["conclusion_diagnostica"] = "\n".join(lineas)
 
     # === 🔹 Preformatear líneas de conclusión para el template ===
@@ -416,8 +393,7 @@ def generar_pdf(request, rut, numero_biopsia):
                     pares.append({"label": "", "valor": l.strip()})
             inf["conclusion_diagnostica_pares"] = pares
 
-
-    # === 🔹 Convertir guiones a viñetas (después de reordenar) ===
+    # === 🔹 Convertir guiones a viñetas ===
     for inf in informes:
         for campo in ["antecendentes_clinicos", "examen_macroscopico", "examen_microscopico", "conclusion_diagnostica", "informe_complementario"]:
             if campo in inf:
@@ -441,32 +417,51 @@ def generar_pdf(request, rut, numero_biopsia):
     es_fish = "DIAGNÓSTICO FISH" in tipo_examen
 
     if es_fish:
-        # 🔹 Agregar campos específicos si existen
         informes[0]["formulario_fish"] = limpiar_rtf(informes[0].get("formulario_fish", ""))
         informes[0]["interpretacion"] = limpiar_rtf(informes[0].get("interpretacion", ""))
         informes[0]["referencia"] = limpiar_rtf(informes[0].get("referencia", ""))
 
-    # === 🔹 Render HTML ===
+    # === 🔹 CONSTRUIR RUTAS ABSOLUTAS PARA IMÁGENES ===
+    # Directorio base de archivos estáticos
+    static_dir = os.path.join(settings.BASE_DIR, "backend", "static")
+    
+    # Rutas absolutas para WeasyPrint
+    logo_path = os.path.join(static_dir, "img", "Logotipo_secundario_sin_slogan.png")
+    firmas_dir = os.path.join(static_dir, "firmas")
+    
+    # Verificar si el logo existe
+    if not os.path.exists(logo_path):
+        print(f"⚠️ Logo no encontrado en: {logo_path}")
+    
+    # === 🔹 Context para el template ===
     context = {
         "informes": informes,
         "barcode": barcode_base64,
-        "STATIC_ROOT": str(Path(settings.STATIC_ROOT).absolute()),
         "es_fish": es_fish,
+        "logo_path": f"file://{logo_path}",  # Ruta absoluta para el logo
+        "firmas_dir": f"file://{firmas_dir}",  # Ruta absoluta para firmas
     }
 
     template_name = "pdf_informe_apa.html"
     html_string = render_to_string(template_name, context)
-
     pdf_buffer = BytesIO()
-    HTML(string=html_string, base_url=str(Path(settings.STATIC_ROOT).absolute())).write_pdf(pdf_buffer)
+
+    # === 🔹 Generar PDF con base_url correcto ===
+    HTML(
+        string=html_string,
+        base_url=f"file://{static_dir}/"  # Base para resolver rutas relativas
+    ).write_pdf(pdf_buffer)
+
     pdf_buffer.seek(0)
 
+    # === 🔹 Respuesta HTTP ===
     response = HttpResponse(pdf_buffer.read(), content_type="application/pdf")
     response["Content-Disposition"] = f'inline; filename="informe_{numero_biopsia}.pdf"'
     response["Access-Control-Allow-Origin"] = "*"
     response["X-Frame-Options"] = "ALLOWALL"
     response["Cross-Origin-Opener-Policy"] = "same-origin"
     response["Cross-Origin-Embedder-Policy"] = "require-corp"
+
     return response
 
 

@@ -1,4 +1,4 @@
-// App.jsx (CORRECTO)
+// App.jsx
 import React, { useEffect, useState } from "react";
 import VisorReportes from "./components/VisorReportes";
 
@@ -25,7 +25,7 @@ function App() {
     if (host === "localhost" && port === "3000") {
       API_BASE = "http://localhost:8000";
     } else {
-      API_BASE = "/api";
+      API_BASE = "/visor_apa_portal/api";
     }
 
     console.log("🌐 API_BASE =", API_BASE);
@@ -99,7 +99,6 @@ function App() {
     );
   }
 
-  // 🔹 AQUÍ ESTÁ EL PROBLEMA: Pasar los informes como prop
   return <VisorReportes informes={informes} />;
 }
 

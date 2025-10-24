@@ -3,13 +3,7 @@ import * as pdfjsLib from "pdfjs-dist";
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = `${window.location.origin}/pdf.worker.min.mjs`;
 
-// para pruebas locales fuera de docker (reemplaza lo anterior)
-// pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
-//   "pdfjs-dist/build/pdf.worker.min.mjs",
-//   import.meta.url
-// ).toString();
-
-// Componente PdfVisor mejorado
+// Componente PdfVisor 
 function PdfVisor({ pdfUrl }) {
   const pdfWrapperRef = useRef(null);
   const externalNodeRef = useRef(null);
@@ -130,7 +124,7 @@ function PdfVisor({ pdfUrl }) {
   );
 }
 
-// Componente principal mejorado
+// Componente principal 
 export default function VisorReportes() {
   const [informes, setInformes] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -305,7 +299,7 @@ export default function VisorReportes() {
                     {inf.nombre}
                   </div>
                   <div style={{ fontSize: "0.75rem", color: "#888", marginTop: "0.1rem" }}>
-                    RUT: {inf.rut}
+                    RUT/DNI: {inf.rut}
                   </div>
                 </div>
               </div>

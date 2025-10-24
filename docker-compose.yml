@@ -7,32 +7,39 @@ services:
     restart: always
     env_file:
       - .env
-    command: ["gunicorn", "backend.wsgi:application", "--bind", "0.0.0.0:8080"]
+    command: ["gunicorn", "backend.wsgi:application", "--bind", "0.0.0.0:8084"]
     environment:
       - DJANGO_SETTINGS_MODULE=backend.settings
-      - FRONTEND_URL=http://172.16.8.194:8080  # ✅ URL base para generar links
-      - DJANGO_ALLOWED_HOSTS=172.16.8.194,localhost,apa_backend  # ✅ Hosts permitidos
+      - FRONTEND_URL=http://172.16.8.194:8084
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY}
     volumes:
       - ./backend:/app/backend
       - ./static:/app/static
     expose:
-      - "8080"
+      - "8084"
     networks:
-      - sistemas_network
+      - nginx_compartida
 
   nginx_apa:
     build:
       context: .
-      target: final          # 👈 usa la etapa Nginx final
+      target: final
     container_name: nginx_apa
     restart: always
     ports:
-      - "8080:80"
+      - "8084:80"
     depends_on:
       - apa_backend
+    environment:
+      - NGINX_HOST=172.16.8.194
+      - NGINX_PORT=80
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./backend/backend/static:/app/backend/backend/static
+      - ./static:/app/static
     networks:
-      - sistemas_network
+      - nginx_compartida
 
 networks:
-  sistemas_network:
+  nginx_compartida:
     external: true

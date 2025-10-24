@@ -11,24 +11,35 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 from pathlib import Path
+import os
+import base64
+from cryptography.fernet import Fernet
+from django.http import JsonResponse
 
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
+
+# ==============================
+# BASE PATHS
+# ==============================
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
+# ==============================
+# SECURITY
+# ==============================
 
-# SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'django-insecure-0b(acr1xr(jpbpn$oa@t)9h!ei^t2i%g!davxwugxs7svue$ic'
+DEBUG = False
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+ALLOWED_HOSTS = os.getenv(
+    'DJANGO_ALLOWED_HOSTS',
+    '172.16.8.194,localhost,127.0.0.1,host.docker.internal'
+).split(',')
 
 
-
-
-# Application definition
+# ==============================
+# APPLICATIONS
+# ==============================
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -41,6 +52,11 @@ INSTALLED_APPS = [
     'pdf_app',
 ]
 
+
+# ==============================
+# MIDDLEWARE
+# ==============================
+
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -52,7 +68,32 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
+
+# Middleware adicional para CORS simple
+def simple_cors_middleware(get_response):
+    def middleware(request):
+        response = get_response(request)
+        response["Access-Control-Allow-Origin"] = "*"
+        response["Access-Control-Allow-Methods"] = "GET, OPTIONS"
+        response["Access-Control-Allow-Headers"] = "Content-Type"
+        response["X-Frame-Options"] = "ALLOWALL"  # necesario para iframes
+        return response
+    return middleware
+
+MIDDLEWARE.append('backend.settings.simple_cors_middleware')
+
+
+# ==============================
+# URLS & WSGI
+# ==============================
+
 ROOT_URLCONF = 'backend.urls'
+WSGI_APPLICATION = 'backend.wsgi.application'
+
+
+# ==============================
+# TEMPLATES
+# ==============================
 
 TEMPLATES = [
     {
@@ -69,11 +110,10 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'backend.wsgi.application'
 
-
-# Database
-# https://docs.djangoproject.com/en/5.2/ref/settings/#databases
+# ==============================
+# DATABASE
+# ==============================
 
 DATABASES = {
     'default': {
@@ -83,102 +123,45 @@ DATABASES = {
 }
 
 
-# Password validation
-# https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
+# ==============================
+# PASSWORD VALIDATION
+# ==============================
 
 AUTH_PASSWORD_VALIDATORS = [
-    {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
-    },
+    {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',},
+    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',},
+    {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',},
+    {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',},
 ]
 
 
-# Internationalization
-# https://docs.djangoproject.com/en/5.2/topics/i18n/
+# ==============================
+# INTERNATIONALIZATION
+# ==============================
 
 LANGUAGE_CODE = 'en-us'
-
 TIME_ZONE = 'UTC'
-
 USE_I18N = True
-
 USE_TZ = True
 
 
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/5.2/howto/static-files/
+# ==============================
+# STATIC FILES
+# ==============================
 
-
-
-import os
-from pathlib import Path
-
-BASE_DIR = Path(__file__).resolve().parent.parent
-
-STATIC_URL = '/static/'
-
-# 📦 Donde Django almacenará los archivos recolectados
+STATIC_URL = '/visor_apa_portal/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-
-
-# 📂 Donde están los archivos fuente (img, firmas, css locales, etc.)
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'backend', 'static'),
 ]
 
 
-
-
-
-
-
-# Default primary key field type
-# https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
-
-DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
-
-from django.http import JsonResponse
-
-# Permitir que React (localhost:3000) cargue PDFs
-def simple_cors_middleware(get_response):
-    def middleware(request):
-        response = get_response(request)
-        response["Access-Control-Allow-Origin"] = "*"
-        response["Access-Control-Allow-Methods"] = "GET, OPTIONS"
-        response["Access-Control-Allow-Headers"] = "Content-Type"
-        response["X-Frame-Options"] = "ALLOWALL"  # 🔹 necesario para iframes
-        return response
-    return middleware
-
-MIDDLEWARE.append('backend.settings.simple_cors_middleware')
+# ==============================
+# CORS CONFIGURATION
+# ==============================
 
 CORS_ALLOW_ALL_ORIGINS = True  # para desarrollo
 
-# settings.py
-
-import os
-
-# ... tu configuración existente ...
-
-# ✅ URL base del frontend
-FRONTEND_URL = os.getenv('FRONTEND_URL', 'http://localhost:8080')
-
-# ✅ Proxy reverso (Nginx)
-USE_X_FORWARDED_HOST = True
-USE_X_FORWARDED_PORT = True
-SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
-
-# ✅ CORS permitido
 CORS_ALLOWED_ORIGINS = [
     "http://172.16.8.194:8080",
     "http://192.168.0.11:8080",
@@ -187,15 +170,28 @@ CORS_ALLOWED_ORIGINS = [
 ]
 CORS_ALLOW_CREDENTIALS = True
 
-# ✅ Hosts permitidos
-ALLOWED_HOSTS = os.getenv('DJANGO_ALLOWED_HOSTS', '172.16.8.194,localhost,127.0.0.1,host.docker.internal').split(',')
+
+# ==============================
+# PROXY / FRONTEND
+# ==============================
+
+FRONTEND_URL = "https://encuesta.local.falp.org/visor_apa_portal/"
+
+USE_X_FORWARDED_HOST = True
+USE_X_FORWARDED_PORT = True
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 
+# ==============================
+# DEFAULT FIELD
+# ==============================
 
-from cryptography.fernet import Fernet
-import base64, os
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-FERNET_KEY = os.environ.get("FERNET_KEY")  # p.ej. export FERNET_KEY='...'
-# Si no existe, genérala una sola vez localmente: Fernet.generate_key().decode()
 
+# ==============================
+# CUSTOM KEYS
+# ==============================
+
+FERNET_KEY = os.environ.get("FERNET_KEY")  # export FERNET_KEY='...'
 API_KEY = os.environ.get("API_KEY", "tu-clave-secreta-aqui")

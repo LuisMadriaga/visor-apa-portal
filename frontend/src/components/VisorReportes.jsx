@@ -1,8 +1,9 @@
-// VisorReportes.jsx (CORREGIDO FINAL)
+// VisorReportes.jsx
 import { useEffect, useState, useRef } from "react";
 import * as pdfjsLib from "pdfjs-dist";
 
-pdfjsLib.GlobalWorkerOptions.workerSrc = `${window.location.origin}/pdf.worker.min.mjs`;
+pdfjsLib.GlobalWorkerOptions.workerSrc = `${window.location.origin}/visor_apa_portal/pdf.worker.min.mjs`;
+
 
 export default function VisorReportes({ informes }) {
   const [selectedIndex, setSelectedIndex] = useState(0);
@@ -241,7 +242,7 @@ export default function VisorReportes({ informes }) {
         >
           {/* Logo */}
           <img
-            src={`/static/img/logo_falp4.png?v=${Date.now()}`}
+            src={`/visor_apa_portal/static/img/logo_falp4.png?v=${Date.now()}`}
             alt="Logo FALP"
             style={{
               height: isMobile ? "34px" : "42px",
@@ -250,11 +251,12 @@ export default function VisorReportes({ informes }) {
             }}
           />
 
+
           {/* Texto central */}
           <div
             style={{
               flex: isMobile ? "0 0 auto" : "1 1 auto",
-              textAlign: isMobile ? "center" : "left", // 🔹 cambia "right" por "left"
+              textAlign: isMobile ? "center" : "left", 
               lineHeight: 1.2,
               paddingLeft: isMobile ? "0.0rem" : "1rem", // 🔹 mueve un poco a la izquierda
               paddingRight: isMobile ? "0.5rem" : "0.8rem", // 🔹 deja un respiro visual
@@ -287,50 +289,57 @@ export default function VisorReportes({ informes }) {
         <div
           style={{
             flex: 1,
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "center",
-            alignItems: "center",
+            display: "block",
             background: "#f7f9fb",
             overflowY: "auto",
-            padding: isMobile ? "1rem" : "2rem",
+            padding: isMobile ? "1rem" : "2rem 4rem",
+            textAlign: "center", // 🔹 centrado natural sin afectar flex
           }}
         >
-          <canvas
-            ref={canvasRef}
+          <div
             style={{
-              border: "1px solid #ccc",
-              borderRadius: "10px",
-              boxShadow: "0 3px 10px rgba(0,0,0,0.1)",
-              maxWidth: "100%",
-              width: isMobile ? "100%" : "auto",
-              height: "auto",
-              marginBottom: "1.5rem",
-              background: "#fff",
+              display: "inline-block",
+              textAlign: "center",
+              maxWidth: isMobile ? "100%" : "900px", // 🔹 mantiene tamaño fijo en PC
+              width: isMobile ? "100%" : "75%",
             }}
-          />
-          <button
-            onClick={() => window.open(selectedInforme.url, "_blank")}
-            style={{
-              background: "#003366",
-              color: "#fff",
-              border: "none",
-              borderRadius: "8px",
-              padding: isMobile ? "0.7rem 1.5rem" : "0.8rem 2rem",
-              fontSize: isMobile ? "0.9rem" : "1rem",
-              cursor: "pointer",
-              boxShadow: "0 3px 8px rgba(0,0,0,0.2)",
-              transition: "background 0.3s ease",
-            }}
-            onMouseOver={(e) =>
-              (e.currentTarget.style.background = "#004c99")
-            }
-            onMouseOut={(e) =>
-              (e.currentTarget.style.background = "#003366")
-            }
           >
-            📄 Ver informe completo
-          </button>
+            <canvas
+              ref={canvasRef}
+              style={{
+                border: "1px solid #ccc",
+                borderRadius: "10px",
+                boxShadow: "0 3px 10px rgba(0,0,0,0.1)",
+                background: "#fff",
+                width: "100%",
+                height: "auto",
+                marginBottom: "1.5rem",
+                objectFit: "contain",
+              }}
+            />
+            <button
+              onClick={() => window.open(selectedInforme.url, "_blank")}
+              style={{
+                background: "#003366",
+                color: "#fff",
+                border: "none",
+                borderRadius: "8px",
+                padding: isMobile ? "0.7rem 1.5rem" : "0.8rem 2rem",
+                fontSize: isMobile ? "0.9rem" : "1rem",
+                cursor: "pointer",
+                boxShadow: "0 3px 8px rgba(0,0,0,0.2)",
+                transition: "background 0.3s ease",
+              }}
+              onMouseOver={(e) =>
+                (e.currentTarget.style.background = "#004c99")
+              }
+              onMouseOut={(e) =>
+                (e.currentTarget.style.background = "#003366")
+              }
+            >
+              📄 Ver informe completo
+            </button>
+          </div>
         </div>
       </div>
     </div>
