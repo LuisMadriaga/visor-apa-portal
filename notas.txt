@@ -15,3 +15,18 @@
 
 
 docker network create sistemas_network
+
+
+
+
+sudo docker exec -it apa_backend bash
+
+python manage.py shell
+
+print("🧾 Últimos accesos:")
+for log in LogAcceso.objects.order_by('-fecha_acceso')[:5]:
+    print(log.id, log.rut_paciente, log.ip, log.fecha_acceso, log.estado)
+
+print("\n📄 Últimas visualizaciones:")
+for log in LogVisualizacion.objects.order_by('-fecha_visualizacion')[:5]:
+    print(log.id, log.rut, log.numero_biopsia, log.ip, log.fecha_visualizacion)

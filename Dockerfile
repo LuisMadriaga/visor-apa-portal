@@ -3,6 +3,11 @@
 ############################################
 FROM node:20-alpine AS build_frontend
 
+# Establecer zona horaria a Chile
+ENV TZ=America/Santiago
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+
+
 WORKDIR /app
 
 RUN apk add --no-cache python3 make g++ bash

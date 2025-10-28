@@ -115,10 +115,21 @@ TEMPLATES = [
 # DATABASE
 # ==============================
 
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': BASE_DIR / 'db.sqlite3',
+#     }
+# }
+
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'visor_apa',
+        'USER': 'desa',
+        'PASSWORD': 'Falp##2025$',
+        'HOST': '192.168.140.128',
+        'PORT': '5432',
     }
 }
 
@@ -179,7 +190,13 @@ FRONTEND_URL = "https://encuesta.local.falp.org/visor_apa_portal/"
 
 USE_X_FORWARDED_HOST = True
 USE_X_FORWARDED_PORT = True
-SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+#PROD
+#SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+#DEV
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'http')
+
 
 
 # ==============================
@@ -195,3 +212,4 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 FERNET_KEY = os.environ.get("FERNET_KEY")  # export FERNET_KEY='...'
 API_KEY = os.environ.get("API_KEY", "tu-clave-secreta-aqui")
+

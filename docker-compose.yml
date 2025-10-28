@@ -12,6 +12,7 @@ services:
       - DJANGO_SETTINGS_MODULE=backend.settings
       - FRONTEND_URL=http://172.16.8.194:8084
       - ENCRYPTION_KEY=${ENCRYPTION_KEY}
+      - TZ=America/Santiago               
     volumes:
       - ./backend:/app/backend
       - ./static:/app/static
@@ -43,3 +44,4 @@ services:
 networks:
   nginx_compartida:
     external: true
+

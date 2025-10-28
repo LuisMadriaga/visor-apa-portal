@@ -20,6 +20,23 @@ from django.views.decorators.http import require_http_methods
 from functools import wraps
 
 
+# 🧩 IMPORTAR MODELOS DE LOGS Y FUNCIÓN AUXILIAR
+from .models import LogAcceso, LogVisualizacion
+
+def get_client_ip(request):
+    """
+    Obtiene la IP real del cliente considerando cadenas de proxies.
+    """
+    forwarded_for = request.META.get("HTTP_X_FORWARDED_FOR")
+    if forwarded_for:
+        # Toma la primera IP (cliente real)
+        ip = forwarded_for.split(",")[0].strip()
+    else:
+        ip = request.META.get("REMOTE_ADDR")
+    return ip
+
+
+
 def generar_pdf_token(request, token):
     try:
         payload = parse_pdf_token(token)
@@ -82,6 +99,35 @@ def generate_access_token(request):
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
 
+# def validate_access_token(request):
+#     """
+#     Valida un token de acceso y devuelve el RUT.
+#     GET /api/validate-access/?token=xxxxx
+#     """
+#     token = request.GET.get("token", "").strip()
+    
+#     if not token:
+#         return JsonResponse({"error": "Token requerido"}, status=400)
+    
+#     try:
+#         payload = parse_access_token(token)
+#         return JsonResponse({
+#             "valid": True,
+#             "rut": payload["rut"]
+#         })
+    
+#     except InvalidToken:
+#         return JsonResponse({
+#             "valid": False,
+#             "error": "Token inválido o expirado"
+#         }, status=401)
+    
+#     except Exception as e:
+#         return JsonResponse({
+#             "valid": False,
+#             "error": "Error al validar token"
+#         }, status=500)
+
 def validate_access_token(request):
     """
     Valida un token de acceso y devuelve el RUT.
@@ -94,12 +140,30 @@ def validate_access_token(request):
     
     try:
         payload = parse_access_token(token)
+        rut = payload["rut"]
+
+        # 🧩 REGISTRAR ACCESO EXITOSO
+        LogAcceso.objects.create(
+            rut_paciente=rut,
+            token_hash=token[:80],  # Guardamos parte del hash
+            ip=get_client_ip(request),
+            user_agent=request.META.get("HTTP_USER_AGENT", ""),
+            estado="OK"
+        )
+
         return JsonResponse({
             "valid": True,
-            "rut": payload["rut"]
+            "rut": rut
         })
     
     except InvalidToken:
+        # 🧩 REGISTRAR TOKEN INVÁLIDO
+        LogAcceso.objects.create(
+            token_hash=token[:80],
+            ip=get_client_ip(request),
+            user_agent=request.META.get("HTTP_USER_AGENT", ""),
+            estado="FAIL"
+        )
         return JsonResponse({
             "valid": False,
             "error": "Token inválido o expirado"
@@ -110,6 +174,7 @@ def validate_access_token(request):
             "valid": False,
             "error": "Error al validar token"
         }, status=500)
+
 
 def convertir_a_vinetas(texto):
     """
@@ -453,6 +518,31 @@ def generar_pdf(request, rut, numero_biopsia):
     ).write_pdf(pdf_buffer)
 
     pdf_buffer.seek(0)
+
+
+    # === 🔹 Registrar visualización PDF ===
+    try:
+        token_hash = request.GET.get("token") or ""
+        ip = get_client_ip(request)
+        user_agent = request.META.get("HTTP_USER_AGENT", "Desconocido")[:255]
+
+        print(f"📥 Intentando registrar visualización: {rut} - {numero_biopsia} - {ip}")
+
+        nuevo_log = LogVisualizacion.objects.create(
+            rut_paciente=str(rut),
+            documento_id=str(numero_biopsia),
+            ip=ip,
+            user_agent=user_agent,
+            token_hash=token_hash[:80],
+            accion="VISUALIZACION_PDF"
+        )
+
+        print(f"✅ Log de visualización guardado correctamente ID={nuevo_log.id}")
+    except Exception as e:
+        print(f"❌ Error registrando visualización PDF: {e}")
+
+
+
 
     # === 🔹 Respuesta HTTP ===
     response = HttpResponse(pdf_buffer.read(), content_type="application/pdf")
