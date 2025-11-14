@@ -1,26 +1,40 @@
 ############################################
 # 1️⃣ BUILD FRONTEND (React)
 ############################################
-FROM node:20-alpine AS build_frontend
-
-# Establecer zona horaria a Chile
+FROM node:20-bullseye AS build_frontend   
 ENV TZ=America/Santiago
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
-
 WORKDIR /app
 
-RUN apk add --no-cache python3 make g++ bash
+# Dependencias necesarias
+RUN sed -i 's|http://deb.debian.org/debian|https://deb.debian.org/debian|g' /etc/apt/sources.list && \
+    apt-get update && \
+    apt-get install -y python3 make g++ bash && \
+    rm -rf /var/lib/apt/lists/*
 
-COPY frontend/package*.json ./
+
+# Configuración robusta NPM (evita tus errores de TLS)
+RUN npm config set registry https://registry.npmjs.org \
+    && npm config set strict-ssl false \
+    && npm config set fetch-retries 5 \
+    && npm config set fetch-retry-mintimeout 20000 \
+    && npm config set fetch-retry-maxtimeout 120000 \
+    && npm config set prefer-online true \
+    && npm config set progress=false \
+    && npm config set fund=false \
+    && npm config set audit=false
+
+COPY frontend/package*.json ./ 
 RUN npm install --silent
 
 COPY frontend/ ./
-ARG REACT_APP_API_BASE=/visor_apa_portal/api
+
+ARG REACT_APP_API_BASE=/visor_apa_portal_2/api
 ENV REACT_APP_API_BASE=$REACT_APP_API_BASE
 
-
 RUN npm run build
+
 
 
 ############################################
@@ -69,7 +83,7 @@ COPY requirements.txt .
 RUN pip install --upgrade pip && pip install -r requirements.txt && pip install gunicorn
 
 COPY backend/ .
-COPY --from=build_frontend /app/build ./backend/static/visor_apa_portal
+COPY --from=build_frontend /app/build ./backend/static/visor_apa_portal_2
 
 ENV DJANGO_SETTINGS_MODULE=backend.settings
 

@@ -33,7 +33,7 @@ DEBUG = False
 
 ALLOWED_HOSTS = os.getenv(
     'DJANGO_ALLOWED_HOSTS',
-    '172.16.8.194,localhost,127.0.0.1,host.docker.internal'
+    '192.168.140.128,172.16.8.194,localhost,127.0.0.1,host.docker.internal'
 ).split(',')
 
 
@@ -115,12 +115,6 @@ TEMPLATES = [
 # DATABASE
 # ==============================
 
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.sqlite3',
-#         'NAME': BASE_DIR / 'db.sqlite3',
-#     }
-# }
 
 DATABASES = {
     'default': {
@@ -160,7 +154,7 @@ USE_TZ = True
 # STATIC FILES
 # ==============================
 
-STATIC_URL = '/visor_apa_portal/static/'
+STATIC_URL = '/visor_apa_portal_2/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'backend', 'static'),
@@ -174,11 +168,10 @@ STATICFILES_DIRS = [
 CORS_ALLOW_ALL_ORIGINS = True  # para desarrollo
 
 CORS_ALLOWED_ORIGINS = [
-    "http://172.16.8.194:8080",
-    "http://192.168.0.11:8080",
-    "http://localhost:8080",
-    "http://localhost:3000",
+    "https://examenes.falp.org",
+    "http://192.168.140.128:8085",
 ]
+
 CORS_ALLOW_CREDENTIALS = True
 
 
@@ -186,18 +179,25 @@ CORS_ALLOW_CREDENTIALS = True
 # PROXY / FRONTEND
 # ==============================
 
-FRONTEND_URL = "https://encuesta.local.falp.org/visor_apa_portal/"
+FRONTEND_URL = os.getenv(
+    "FRONTEND_URL",
+)
+
+
 
 USE_X_FORWARDED_HOST = True
 USE_X_FORWARDED_PORT = True
 
 #PROD
-#SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 #DEV
-SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'http')
+#SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'http')
 
-
+CSRF_TRUSTED_ORIGINS = [
+    "https://examenes.falp.org",
+    "http://192.168.140.128:8085",
+]
 
 # ==============================
 # DEFAULT FIELD

@@ -1,47 +1,45 @@
 services:
-  apa_backend:
+  apa_backend_2:
     build:
       context: .
       target: build_backend
-    container_name: apa_backend
+    container_name: apa_backend_2
     restart: always
     env_file:
       - .env
-    command: ["gunicorn", "backend.wsgi:application", "--bind", "0.0.0.0:8084"]
+    command: ["gunicorn", "backend.wsgi:application", "--bind", "0.0.0.0:8085"]
     environment:
       - DJANGO_SETTINGS_MODULE=backend.settings
-      - FRONTEND_URL=http://172.16.8.194:8084
+      - FRONTEND_URL=https://examenes.falp.org/visor_apa_portal_2/
       - ENCRYPTION_KEY=${ENCRYPTION_KEY}
-      - TZ=America/Santiago               
+      - TZ=America/Santiago
     volumes:
       - ./backend:/app/backend
       - ./static:/app/static
     expose:
-      - "8084"
+      - "8085"
     networks:
       - nginx_compartida
 
-  nginx_apa:
+  nginx_apa_2:
     build:
       context: .
       target: final
-    container_name: nginx_apa
+    container_name: nginx_apa_2
     restart: always
     ports:
-      - "8084:80"
+      - "8085:80"
     depends_on:
-      - apa_backend
+      - apa_backend_2
     environment:
       - NGINX_HOST=172.16.8.194
       - NGINX_PORT=80
     volumes:
       - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
       - ./backend/backend/static:/app/backend/backend/static
-      - ./static:/app/static
     networks:
       - nginx_compartida
 
 networks:
   nginx_compartida:
     external: true
-

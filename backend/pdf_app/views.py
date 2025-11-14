@@ -352,7 +352,7 @@ def listar_informes(request, rut=None):
             "medico": medico,
             "fecha": fecha.strftime("%d/%m/%Y %H:%M") if fecha else "",
             # 🔗 Nueva URL cifrada
-            "url": f"/visor_apa_portal/api/pdf/v2/{token}/" if token else None
+            "url": f"/visor_apa_portal_2/api/pdf/v2/{token}/" if token else None
         })
 
     return JsonResponse(data, safe=False)

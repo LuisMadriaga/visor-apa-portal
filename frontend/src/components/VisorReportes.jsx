@@ -2,7 +2,7 @@
 import { useEffect, useState, useRef } from "react";
 import * as pdfjsLib from "pdfjs-dist";
 
-pdfjsLib.GlobalWorkerOptions.workerSrc = `${window.location.origin}/visor_apa_portal/pdf.worker.min.mjs`;
+pdfjsLib.GlobalWorkerOptions.workerSrc = `${window.location.origin}/visor_apa_portal_2/pdf.worker.min.mjs`;
 
 
 export default function VisorReportes({ informes }) {
@@ -242,7 +242,7 @@ export default function VisorReportes({ informes }) {
         >
           {/* Logo */}
           <img
-            src={`/visor_apa_portal/static/img/logo_falp4.png?v=${Date.now()}`}
+            src={`/visor_apa_portal_2/static/img/logo_falp4.png?v=${Date.now()}`}
             alt="Logo FALP"
             style={{
               height: isMobile ? "34px" : "42px",

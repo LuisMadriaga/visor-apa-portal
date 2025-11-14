@@ -1,6 +1,7 @@
 // App.jsx
 import React, { useEffect, useState } from "react";
 import VisorReportes from "./components/VisorReportes";
+import MensajeResultados from "./components/MensajeResultados";
 
 function App() {
   const [informes, setInformes] = useState([]);
@@ -25,7 +26,7 @@ function App() {
     if (host === "localhost" && port === "3000") {
       API_BASE = "http://localhost:8000";
     } else {
-      API_BASE = "/visor_apa_portal/api";
+      API_BASE = "/visor_apa_portal_2/api";
     }
 
     console.log("🌐 API_BASE =", API_BASE);
@@ -90,13 +91,7 @@ function App() {
   }
 
   if (!informes || informes.length === 0) {
-    return (
-      <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh", background: "#f1f5f9" }}>
-        <p style={{ fontSize: "1.2rem", color: "#555" }}>
-          ⚠️ No se encontraron informes para el paciente.
-        </p>
-      </div>
-    );
+    return <MensajeResultados />;
   }
 
   return <VisorReportes informes={informes} />;

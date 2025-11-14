@@ -244,6 +244,26 @@
     list-style-type: disc;
   }
 
+  .titulo-linea {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+    white-space: nowrap;
+    margin-top: 10px;
+    margin-bottom: 4px;
+  }
+
+  .titulo-linea .titulo {
+    font-weight: bold;
+    font-size: 10pt;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+
+  .titulo-linea .fecha {
+    font-size: 8pt;
+  }
 
   /* ===== CONFIGURACIÓN DE PÁGINA CON PIE DE PÁGINA ===== */
   @page {
@@ -564,14 +584,14 @@
   </tr>
 </table>
 
+{% if es_fish %}
+  <div class="titulo-seccion">
+    INFORME {{ inf.formulario_fish|cut:"DIAGNÓSTICO " }}
+  </div>
+{% else %}
 
-  {% if es_fish %}
-    <div class="titulo-seccion">
-      INFORME {{ inf.formulario_fish|cut:"DIAGNÓSTICO"|cut:" " }}
-    </div>
-  {% else %}
-    <div class="titulo-seccion">
-      INFORME ANATOMOPATOLÓGICO
+  <div class="titulo-seccion">
+    INFORME ANATOMOPATOLÓGICO
     </div>
   {% endif %}
 
@@ -688,12 +708,16 @@
 {% endif %}
 
 
-  {% if inf.informe_complementario %}
+{% if inf.informe_complementario %}
   <div class="seccion">
-    <h3>INFORME COMPLEMENTARIO</h3>
+    <div class="titulo-linea">
+      <span class="titulo">INFORME COMPLEMENTARIO</span>
+      <span class="fecha">{{ inf.fecha_inf_complementario }}</span>
+    </div>
     <p>{{ inf.informe_complementario|safe }}</p>
   </div>
-  {% endif %}
+{% endif %}
+
 
 <!-- ======== BLOQUE DE FIRMAS ======== -->
 <div class="firma-contenedor" style="display: flex; justify-content: space-between; align-items: center; margin-top: 40px;">
