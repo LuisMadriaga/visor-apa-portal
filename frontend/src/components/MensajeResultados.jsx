@@ -1,10 +1,6 @@
 import React from "react";
 
 export default function MensajeResultados() {
-  const volverInicio = () => {
-    window.location.href = "https://www.falp.org/";
-  };
-
   return (
     <div
       style={{
@@ -13,7 +9,8 @@ export default function MensajeResultados() {
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
-        paddingTop: "40px",
+        padding: "32px 16px",
+        boxSizing: "border-box",
       }}
     >
       {/* LOGO FALP */}
@@ -22,7 +19,8 @@ export default function MensajeResultados() {
         alt="FALP"
         style={{
           width: "180px",
-          marginBottom: "40px",
+          maxWidth: "60vw",     // en móviles se adapta
+          marginBottom: "32px",
           opacity: 0.9,
         }}
       />
@@ -31,13 +29,13 @@ export default function MensajeResultados() {
       <div
         style={{
           width: "100%",
-          maxWidth: "580px",
+          maxWidth: "580px",      // tope en escritorio
           background: "#fff",
           borderRadius: "20px",
-          padding: "50px 40px",
+          padding: "32px 24px",
           boxShadow: "0px 10px 40px rgba(0, 0, 0, 0.08)",
           textAlign: "center",
-          position: "relative",
+          boxSizing: "border-box",
         }}
       >
         {/* ÍCONO */}
@@ -50,7 +48,7 @@ export default function MensajeResultados() {
             display: "flex",
             justifyContent: "center",
             alignItems: "center",
-            margin: "0 auto 25px auto",
+            margin: "0 auto 24px auto",
             border: "1px solid #e2e8f0",
           }}
         >
@@ -70,11 +68,12 @@ export default function MensajeResultados() {
           </svg>
         </div>
 
-        {/* TITULO */}
+        {/* TÍTULO */}
         <h2
           style={{
             fontWeight: 600,
-            fontSize: "1.2rem",
+            // responsivo: mínimo 1.1rem, ideal 2.4vw, máximo 1.4rem
+            fontSize: "clamp(1.1rem, 2.4vw, 1.4rem)",
             marginBottom: "10px",
             color: "#0f172a",
           }}
@@ -82,34 +81,16 @@ export default function MensajeResultados() {
           No se encontraron informes para el paciente.
         </h2>
 
-        {/* SUBTITULO */}
+        {/* SUBTÍTULO */}
         <p
           style={{
             color: "#64748b",
-            fontSize: "0.95rem",
-            marginBottom: "20px",
+            fontSize: "clamp(0.9rem, 2.1vw, 1rem)",
+            marginBottom: 0,
           }}
         >
           Vuelve a intentarlo más tarde.
         </p>
-
-        {/* BOTÓN — VOLVER AL INICIO */}
-        <button
-          onClick={volverInicio}
-          style={{
-            marginTop: "25px",
-            background: "#f1f5f9",
-            color: "#1e293b",
-            border: "1px solid #cbd5e1",
-            padding: "10px 18px",
-            fontSize: "0.95rem",
-            borderRadius: "10px",
-            cursor: "pointer",
-            transition: "0.2s",
-          }}
-        >
-          Volver al Inicio
-        </button>
       </div>
     </div>
   );

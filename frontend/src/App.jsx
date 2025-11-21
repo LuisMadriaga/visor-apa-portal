@@ -29,7 +29,6 @@ function App() {
       API_BASE = "/visor_apa_portal_2/api";
     }
 
-    console.log("🌐 API_BASE =", API_BASE);
 
     // 🔹 Validar token y obtener informes
     fetch(`${API_BASE}/validate-access/?token=${encodeURIComponent(token)}`)
@@ -45,21 +44,17 @@ function App() {
         }
 
         const rut = data.rut;
-        console.log("✅ RUT descifrado:", rut);
         setRutPaciente(rut);
 
         return fetch(`${API_BASE}/informes-list/${rut}/`);
       })
       .then((res) => {
-        console.log("📄 Response status:", res.status);
         if (!res.ok) {
           throw new Error(`Error ${res.status}: ${res.statusText}`);
         }
         return res.json();
       })
       .then((data) => {
-        console.log("✅ Data recibida:", data);
-        console.log("✅ Cantidad de informes:", data.length);
         setInformes(data);
       })
       .catch((err) => {
@@ -68,7 +63,6 @@ function App() {
         setInformes([]);
       })
       .finally(() => {
-        console.log("🏁 Finalizando carga");
         setLoading(false);
       });
   }, []);

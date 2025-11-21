@@ -161,13 +161,9 @@ export default function VisorReportes() {
         API_BASE = "/api";  // Nginx redirige a backend
       }
 
-      console.log("🌍 API_BASE =", API_BASE);
-      console.log("📡 Fetching:", `${API_BASE}/informes-list/${rut}/`);
-
       fetch(`${API_BASE}/informes-list/${rut}/`)
         .then(res => res.json())
         .then(data => {
-          console.log("✅ Data recibida:", data);
         })
         .catch(err => console.error("❌ Error:", err));
     }, []);

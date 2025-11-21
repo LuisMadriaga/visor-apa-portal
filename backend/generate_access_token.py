@@ -26,7 +26,7 @@ except Exception as e:
 # =====================================================
 # 3️⃣ Datos del payload (idéntico a crypto_utils.py)
 # =====================================================
-rut = input("👉 Ingrese el RUT para generar token (ej: 12345678-9): ").strip() or "9895722-7"
+rut = input("👉 Ingrese el RUT para generar token (ej: 12345678-9): ").strip() 
 
 payload = {
     "rut": rut,
@@ -41,14 +41,4 @@ payload = {
 data = json.dumps(payload).encode()
 token = fernet.encrypt(data).decode()
 
-# =====================================================
-# 5️⃣ Imprimir resultados
-# =====================================================
-print("=" * 70)
-print("✅ TOKEN DE ACCESO GENERADO CORRECTAMENTE")
-print("=" * 70)
-print(f"🔑 Token cifrado:\n{token}\n")
-print(f"🌐 URL completa de acceso:\n{FRONTEND_URL}/?token={token}\n")
-print("⏰ Vigencia: 24 horas")
-print(f"📅 Generado el: {time.strftime('%Y-%m-%d %H:%M:%S')}")
-print("=" * 70)
+
